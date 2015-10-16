@@ -8,7 +8,7 @@
 namespace response;
 
     class response{
-        private $body = 'hallo';
+        private $body = "";
         private $statuscode = \enum\statuscodes::OK;
         private $reponseHeaders = array();
 
@@ -30,7 +30,7 @@ namespace response;
             foreach($this->reponseHeaders as $headerfield => $value){
                 header($headerfield.':'.$value);
             }
-            return $this->body;
+            echo $this->body;
 
         }
 
