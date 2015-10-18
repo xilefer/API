@@ -152,7 +152,7 @@ class Event
     public function deleteParticipant($UserID, $EventID, $Status)
     {
         $query = "DELETE FROM eventmembers WHERE EventID = $EventID AND UserID = $UserID";
-        $result = mysql_db_query($this->databse,$result,$this->sqlserver);
+        $result = mysql_db_query($this->databse,$query,$this->sqlserver);
         if(mysql_affected_rows($result) < 1) return 'Error';
         else return 'Successful';
     }
