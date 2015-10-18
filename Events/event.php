@@ -54,6 +54,20 @@ class Event
         }
     }
 
+    public function deleteEvent($EventID, $OwnerID)
+    {
+        $query = "DELETE  FROM event WHERE EventID = $EventID AND OwnerID = $OwnerID";
+        $result = mysql_db_query($this->database,$query,$this->sqlserver);
+        if($result == -1) return 'Error';
+        else{
+            //Löschen aller Teilnehmer des Events
+            $query = "DELETE FROM eventmebers WHERE EventID = $EventID";
+            $result = mysql_db_query($this->database,$query,$this->sqlserver);
+            if($result == -1) return 'Error';
+            else return 'Successful';
+        }
+    }
+
     public function changeName($Name, $EventID)
     {
         $sqlserver = $this->sqlserver;
@@ -74,6 +88,18 @@ class Event
         } else return 'Successful';
     }
 
+    public function changeStarttime($EventID, $Starttime){
+        $query = "UPDATE event SET Starttime = $Starttime WHERE EventID = $EventID";
+        $result = mysql_db_query($this->database,$query,$this->sqlserver);
+        if($result == -1) return 'Error';
+        else return 'Successful';
+    }
+
+    public function changeEndtime($Endtime, $EventID)
+    {
+        //Fehlt noch
+    }
+
     public function changeDescription($Description, $EventID)
     {
         $query = "UPDATE event SET Description = $Description WHERE EventID = $EventID";
@@ -90,11 +116,32 @@ class Event
         else return 'Successful';
     }
 
+    public function changeStatus($UserID, $EventID, $Status)
+    {
+        $query = "UPDATE eventmebers SET Status = $Status WHERE UserID = $UserID AND EventID = $EventID";
+        if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) < 1) return 'Error';
+        else return 'Successful';
+    }
+
+    public function changeMaxParticipants($MaxParticipants, $EventID)
+    {
+        $query = "UPDATE event SET MaxParticipants = $MaxParticipants WHERE EventID =$EventID";
+        $result = mysql_db_query($this->database,$query,$this->sqlserver);
+        if($result == -1) return 'Error';
+        else return 'Successful';
+    }
+
     public function addParticipant($UserID, $EventID, $Status)
     {
+        $query = "SELECT MaxParticipants FROM event WHERE EventID = $EventID";
+        $result = mysql_db_query($this->database,$query,$this->sqlserver);
+        $query = "SELECT * FROM eventmembers WHERE EventID=$EventID";
+        $result1 = mysql_db_query($this->database,$query,$this->sqlserver);
+        if(mysql_affected_rows($result1) == $result) return 'Reached MaxParticipants';
+
         $query = "SELECT * FROM eventmebmers WHERE UserID = $UserID AND EventID = $EventID";
         if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) == 0) {
-            $query = "INERT INTO `eventmembers`(`UserID`, `EventID`, `Status`) VALUES ('$UserID'','$EventID'', '$Status'')";
+            $query = "INSERT INTO `eventmembers`(`UserID`, `EventID`, `Status`) VALUES ('$UserID'','$EventID'', '$Status'')";
             if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) != 1) return 'Error';
             else return 'Successful';
         } else {
@@ -102,10 +149,12 @@ class Event
         }
     }
 
-    public function changeStatus($UserID, $EventID, $Status)
+    public function deleteParticipant($UserID, $EventID, $Status)
     {
-        $query = "UPDATE eventmebers SET Status = $Status WHERE UserID = $UserID AND EventID = $EventID";
-        if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) < 1) return 'Error';
+        $query = "DELETE FROM eventmembers WHERE EventID = $EventID AND UserID = $UserID";
+        $result = mysql_db_query($this->databse,$result,$this->sqlserver);
+        if(mysql_affected_rows($result) < 1) return 'Error';
         else return 'Successful';
     }
+
 }
