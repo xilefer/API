@@ -8,19 +8,6 @@
 
 namespace Events;
 
-<<<<<<< HEAD
-class Event{
-
-    public function newEvent(){
-        echo "Penis";
-    }
-
-}
-
-$event = new Event();
-
-$event->newEvent();
-=======
 class Event
 {
 
@@ -134,7 +121,7 @@ class Event
 
     public function changeStatus($UserID, $EventID, $Status)
     {
-        $query = "UPDATE eventmebers SET Status = $Status WHERE UserID = $UserID AND EventID = $EventID";
+        $query = "UPDATE eventmembers SET Status = $Status WHERE UserID = $UserID AND EventID = $EventID";
         if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) < 1) return 'Error';
         else return 'Successful';
     }
@@ -182,4 +169,4 @@ class Event
     }
 
 }
->>>>>>> origin/master
+
