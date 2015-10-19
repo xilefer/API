@@ -61,7 +61,7 @@ class Event
         if($result == -1) return 'Error';
         else{
             //Löschen aller Teilnehmer des Events
-            $query = "DELETE FROM eventmebers WHERE EventID = $EventID";
+            $query = "DELETE FROM eventmembers WHERE EventID = $EventID";
             $result = mysql_db_query($this->database,$query,$this->sqlserver);
             if($result == -1) return 'Error';
             else return 'Successful';
