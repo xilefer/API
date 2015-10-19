@@ -91,13 +91,16 @@ class Event
     public function changeStarttime($EventID, $Starttime){
         $query = "UPDATE event SET Starttime = $Starttime WHERE EventID = $EventID";
         $result = mysql_db_query($this->database,$query,$this->sqlserver);
-        if($result == -1) return 'Error';
+        if($result == FALSE) return 'Error';
         else return 'Successful';
     }
 
     public function changeEndtime($Endtime, $EventID)
     {
-        //Fehlt noch
+        $query = "UPDATE event SET Endtime = $Endtime WHERE EventID = $EventID";
+        $result = mysql_db_query($this->database,$query,$this->sqlserver);
+        if($result == FALSE) return 'Error';
+        else return 'Successful';
     }
 
     public function changeDescription($Description, $EventID)
@@ -120,6 +123,14 @@ class Event
     {
         $query = "UPDATE eventmebers SET Status = $Status WHERE UserID = $UserID AND EventID = $EventID";
         if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) < 1) return 'Error';
+        else return 'Successful';
+    }
+
+    public function changeTransport($EventID, $Transport)
+    {
+        $query = "UPDATE event SET Transport = $Transport WHERE EventID = $EventID";
+        $result = mysql_db_query($this->database,$query,$this->sqlserver);
+        if($result == FALSE) return 'Error';
         else return 'Successful';
     }
 
