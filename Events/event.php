@@ -13,6 +13,7 @@ class Event
 
     private $database;
     private $sqlserver;
+    private $PDO;
 
     public function __construct()
     {
