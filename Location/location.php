@@ -38,51 +38,47 @@ class location
             $stmt->bindParam(":LocationID",$rand,PDO::PARAM_INT);
             $stmt->execute();
         }
-        while($stmt->rowCount() == 1);
+        while($stmt->rowCount() != 0);
+        return $rand;
     }
     public function newLocation($Name,$Description)
     {
         //Ziehen der LocationID
         $LocationID = $this->createLocationID();
-        $query = "INSERT INTO location(`LocationID`,`Name`,`Description`) VALUES (':rand',':Name',':Description')";
+        $query = "INSERT INTO location(`LocationID`,`Name`,`Description`) VALUES (':LocationID',':Name',':Description')";
         $stmt = $this->PDO->prepare($query);
-        $stmt->bindParam(":rand",$LocationID,PDO::PARAM_INT);
+        $stmt->bindParam(":LocationID",$LocationID,PDO::PARAM_INT);
         $stmt->bindParam(":Name",$Name,PDO::PARAM_STR);
         $stmt->bindParam(":Description",$Description,PDO::PARAM_STR);
-        $stmt->execute();
-        $result = $stmt->fetchAll();
-        //Ab hier noch auf PDO umstellen
-        if($result == FALSE) return 'Error';
-        else return 'Successful';
+        if($stmt->execute()) return 'Successful';
+        else return 'Error';
     }
     public function changeName($LocationID, $Name)
     {
-        $query = "UPDATE location SET Name = $Name WHERE LocationID = $LocationID";
-        $result = mysql_db_query($this->database,$query,$this->sqlserver);
-        if($result == FALSE) return 'Error';
-        else return 'Successful';
+        $query = "UPDATE location SET Name = $Name WHERE LocationID = :LocationID";
+        $stmt = $this->PDO->prepare($query);
+        $stmt->bindParam(":LocationID",$LocationID,PDO::PARAM_INT);
+        if($stmt->execute()) return 'Successful';
+        else return 'Error';
     }
     public function changeDescription($LocationID, $Description)
     {
         $query = "UPDATE location SET Description = $Description WHERE LocationID =:LocationID";
         $stmt = $this->PDO->prepare($query);
         $stmt->bindParam(":LocationID",$LocationID,PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetchAll();
-        //$result = mysql_db_query($this->database,$query,$this->sqlserver);
-
-        if($result == FALSE) return 'Error';
-        else return 'Successful';
+        if( $stmt->execute()) return 'Successful';
+        else return 'Error';
     }
     public function getAllLocations()
     {
         $query = "SELECT Name, Description FROM location";
-
-        $result = mysql_db_query($this->database,$query,$this->sqlserver);
-        if($result == FALSE) return 'Error';
+        $stmt =$this->PDO->prepare($query);
+        if($stmt->execute())
+        {
+            return $stmt->fetchAll();
+        }
         else{
-            $result = mysql_fetch_array($result, MYSQL_ASSOC);
-            return $result;
+            return 'Error';
         }
     }
 }
