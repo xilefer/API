@@ -9,6 +9,8 @@ namespace enum;
 
 class statuscodes extends Enum{
     const OK = 200;
+    const CREATED = 201;
+    const UNAUTHORIZED = 401;
     const NOT_FOUND = 404;
     const BAD_REQUEST = 400;
 

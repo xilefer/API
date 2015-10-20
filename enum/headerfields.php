@@ -11,4 +11,5 @@ namespace enum;
 class Headerfields extends Enum{
     const CONTENT_TYPE = 'Content-Type';
     const CONTENT_LANGUAGE = 'Content-Language';
+
 }
