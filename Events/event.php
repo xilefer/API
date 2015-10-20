@@ -111,10 +111,11 @@ class Event
     }
 
     public function changeStarttime($EventID, $Starttime){
-        $query = "UPDATE event SET Starttime = $Starttime WHERE EventID = :EventID";
+        $query = "UPDATE event SET Starttime = :Starttime WHERE EventID = :EventID";
         $PDO = $this->PDO;
         $stmt=$PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        $stmt->bindParam(":Starttime",$Starttime,$PDO::PARAM_STR);
         if($stmt->execute() == FALSE) return 'Error';
         else return 'Successful';
     }
@@ -125,6 +126,7 @@ class Event
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        $stmt->bindParam(":Endtime",$Endtime,$PDO::PARAM_STR);
         if($stmt->execute() == FALSE) return 'Error';
         else return 'Successful';
     }
