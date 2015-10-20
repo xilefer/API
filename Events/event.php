@@ -203,7 +203,7 @@ class Event
         }
     }
 
-    public function deleteParticipant($UserID, $EventID, $Status)
+    public function deleteParticipant($UserID, $EventID)
     {
         $query = "DELETE FROM eventmembers WHERE EventID = :EventID AND UserID = :UserID";
         $PDO = $this->PDO;
