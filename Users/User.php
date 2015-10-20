@@ -11,11 +11,13 @@ namespace Users;
 class User{
 private $database;
 private $sqlserver;
+private $PDO;
 
     public function __construct()
     {
         $this->database = "applicationdb";
         $this->sqlserver = mysql_pconnect("localhost","root");
+        $this->PDO = new \PDO('mysql:host=localhost;dbname=applicationdb','root','');
     }
 
 
@@ -24,7 +26,7 @@ private $sqlserver;
         $database = $this->database;
         $sqlserver = $this->sqlserver;
         $query = "SELECT * FROM user WHERE UserID = '$UserID'";
-
+        $this->PDO->query($query);
         $result= mysql_db_query($database, $query, $sqlserver);
         while ($row = mysql_fetch_object($result)) {
             $ID = $row->UserID;
@@ -98,5 +100,23 @@ private $sqlserver;
         {
             return FALSE;
         }
+    }
+
+    public function verifyUser($Username,$Password)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT `Password` FROM `User` WHERE `Username`='$Username'";
+        $Column=$PDO->query($query);
+        $PW= $Column->fetchColumn(0);
+        if($PW == $Password){
+            return 'Success';
+        }
+        else{
+            return 'Error';
+        }
+
+
+
+
     }
 }

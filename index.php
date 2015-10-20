@@ -14,10 +14,32 @@ $Users = new \Users\User();
 $Events = new \Events\event();
 $Groups = new \Groups\group();
 $URI= $request->getRequestURI();
-//echo "      ";
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
-//print_r($URIs);
+
+
+if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
+{
+    $Username=$_SERVER['PHP_AUTH_USER'];
+    $PW= $_SERVER['PHP_AUTH_PW'];
+    $Auth=$Users->verifyUser($Username,$PW);
+}
+else
+{
+    $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
+    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
+    $response->returnResponse();
+    exit;
+}
+
+if($Auth == 'Error')
+{
+    $response->setBody("Wrong Username or Password");
+    $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
+    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
+    $response->returnResponse();
+    exit;
+}
 switch ($method) {
 
     case (\enum\Methods::GET):
