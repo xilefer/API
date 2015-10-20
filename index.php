@@ -11,6 +11,8 @@ include_once 'init.php';
 $request = new \request\Request();
 $response = new \response\response();
 $Users = new \Users\User();
+$Events = new \Events\event();
+$Groups = new \Groups\group();
 $URI= $request->getRequestURI();
 //echo "      ";
 $method= $request->getMethod();
@@ -67,7 +69,19 @@ switch ($method) {
 
 
             case ('Groups'):
+               $data=$Groups->newGroup("TestGruppe",$URIs[3],$URIs[4],$URIs[5]);
+               if($data == 'Error'){
+                   $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                   $response->returnResponse();
+               }
+               else{
+                   $json = json_encode($data);
+                   $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                   $response->setBody($json);
+                   $response->returnResponse();
+               }
                 echo "PutGroup$URIs[3]";
+
                 break;
 
             case ('Events'):

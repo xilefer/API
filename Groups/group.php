@@ -7,6 +7,8 @@ class group
     private $sqlserver;
     private $PDO;
 
+
+
     public function __construct()
     {
         $this->database = "applicationdb";
@@ -18,6 +20,18 @@ class group
             echo $e->getMessage();
             exit;
         }
+    }
+
+    public function isGroupAdmin($UserID,$GroupID)
+    {
+        $query="SELECT OwnerID FROM group WHERE GroupID = :GroupID";
+        $stmt = $this->PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,PARAM_INT);
+        if($stmt->execute())
+        {
+
+        }
+        else return False;
     }
 
     public function  createGroupID()
