@@ -8,26 +8,49 @@
 
 include_once 'init.php';
 
+
+
 $request = new \request\Request();
 $response = new \response\response();
 $Users = new \Users\User();
 $Events = new \Events\event();
-$Groups = new \Groups\group();
+$Groups = new \Groups\Group();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
-
-
 if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
 {
     $Username=$_SERVER['PHP_AUTH_USER'];
     $PW= $_SERVER['PHP_AUTH_PW'];
     $Auth=$Users->verifyUser($Username,$PW);
 }
+elseif($URIs[2]=="Users" and $URIs[3]=="activate")
+{
+    $code=$Users->activateAccount($URIs[4],$URIs[5]);
+    if($code)
+    {
+        $body="Ihr Account wurde erfolgreich aktiviert.";
+        $response->setBody($body);
+        $response->setStatuscode(\enum\statuscodes::OK);
+        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'text/html');
+        $response->returnResponse();
+        exit;
+    }
+    else
+    {
+        $body="Bei der Aktivierung ihres Accounts ist ein Fehler aufgetreten.";
+        $response->setBody($body);
+        $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'text/html');
+        $response->returnResponse();
+        exit;
+    }
+}
 else
 {
+    $body="ERROR 401 - Unauthorized";
+    $response->setBody($body);
     $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
-    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
     $response->returnResponse();
     exit;
 }
@@ -83,6 +106,7 @@ switch ($method) {
                 else
                 {
                     $json = json_encode($data);
+                    $response->setStatuscode(\enum\statuscodes::CREATED);
                     $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
                     $response->setBody($json);
                     $response->returnResponse();
@@ -91,7 +115,7 @@ switch ($method) {
 
 
             case ('Groups'):
-               $data=$Groups->newGroup("TestGruppe",$URIs[3],$URIs[4],$URIs[5]);
+                $data=$Groups->newGroup("TestGruppe",$URIs[3],$URIs[4],$URIs[5]);
                if($data == 'Error'){
                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
                    $response->returnResponse();
@@ -116,7 +140,21 @@ switch ($method) {
     case (\enum\Methods::POST):
         switch ($URIs[2]) {
             case ("Users"):
-                echo "PostUser$URIs[3]";
+                        $code=$Users->setValue($URIs[3],$URIs[4],$URIs[5]);
+                        if($code)
+                        {
+                            $response->setStatuscode(\enum\statuscodes::OK);
+                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                            $response->returnResponse();
+                        }
+                        else
+                        {
+                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                            $response->returnResponse();
+                        }
+
+
                 break;
 
             case ('Groups'):
@@ -146,7 +184,6 @@ switch ($method) {
 
         }
         break;
-//$request->getMethod();
 }
 
 
