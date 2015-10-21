@@ -40,6 +40,7 @@ class Event
         return $rand;
     }
 
+    //OwnerID ist die UserID des Erstellers und somit auch Gruppenadministrator
     public function newEvent($Name, $LocationID, $Starttime, $Endtime, $MeetingPoint, $Description, $OwnerID, $Status, $MaxParticipants, $Transport)
     {
         //Ermitteln der EventID
@@ -65,27 +66,49 @@ class Event
         }
     }
 
+    //Methode darf nur vom GroupOwner ausgeführt werden
     public function deleteEvent($EventID, $OwnerID)
     {
-        $query = "DELETE  FROM event WHERE EventID = :EventID AND OwnerID = :OwnerID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
-        if($stmt->execute()){
-            //Löschen aller Teilnehmer des Events
-            $query = "DELETE FROM eventmembers WHERE EventID = :EventID";
-            $stmt = $this->PDO->prepare($query);
+        if($this->isGroupAdmin($OwnerID,$EventID))
+        {
+            $query = "DELETE  FROM event WHERE EventID = :EventID AND OwnerID = :OwnerID";
+            $PDO = $this->PDO;
+            $stmt = $PDO->prepare($query);
             $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-            if($stmt->execute()) return 'Successful';
-            else return 'Error';
-        }
-        else{
+            $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
+            if($stmt->execute()){
+                //Löschen aller Teilnehmer des Events
+                $query = "DELETE FROM eventmembers WHERE EventID = :EventID";
+                $stmt = $this->PDO->prepare($query);
+                $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+                if($stmt->execute()) return 'Successful';
+                else return 'Error';
+            }
+            else{
 
-            return 'Error';
+                return 'Error';
+            }
         }
     }
 
+    #region Change-Methoden
+
+    public function setValue($Param,$Value,$EventID,$UserID)
+    {
+        if($this->isEventOwner($UserID,$EventID))
+        {
+            $query = "UPDATE event SET :Param = :Value WHERE EventID = :EventID";
+            $PDO = $this->PDO;
+            $stmt = $PDO->prepare($query);
+            $stmt->bindParam(":Param",$Param,$PDO::PARAM_STR);
+            $stmt->bindParam(":Value",$Value, $PDO::PARAM_STR);
+            $stmt->bindParam(":EventID",$EventID, $PDO::PARAM_STR);
+            if($stmt->execute()) return 'Successful';
+            else return 'Error';
+        }
+        else return 'User is not Groupadmin';
+    }
+/*
     public function changeName($Name, $EventID)
     {
         $query = "UPDATE event SET Name = :Name WHERE EventID = :EventID";
@@ -184,6 +207,11 @@ class Event
         if($stmt->execute() == false) return 'Error';
         else return 'Successful';
     }
+*/
+
+#endregion
+
+
 
     public function addParticipant($UserID, $EventID, $Status)
     {
@@ -216,5 +244,74 @@ class Event
         else return 'Error';
     }
 
+    public function addGroup($EventID,$GroupID)
+    {
+        $PDO = $this->PDO;
+        $query = "INSERT into groupevents (`GroupID`,`EventID`) VALUES (':GroupID',':EventID')";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute()) return 'Successful';
+        else return 'Error';
+    }
+
+    public function removeGroup($EventID,$GroupID)
+    {
+        $PDO = $this->PDO;
+        $query = "DELETE FROM groupevents WHERE EventID=:EventID AND GroupID=:GroupID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute()) return 'Successful';
+        else return 'Error';
+    }
+
+    public function getGroupsForEvent($EventID)
+    {
+        $PDO = $this->PDO;
+        $query ="SELECT GroupID FROM groupevents WHERE EventID = :EventID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute()) return $stmt->fetchAll();
+        else return 'Error';
+    }
+
+    public function isParticipant($UserID,$EventID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT UserID FROM eventmember WHERE EventID = :EventID AND UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            if($stmt->rowCount() == 1) return TRUE;
+            else return FALSE;
+        }
+        return FALSE;
+    }
+
+    private function isEventOwner($UserID,$EventID)
+    {
+        $query = "SELECT OwnerID FROM event WHERE EventID =:EventID";
+        $PDO = $this->PDO;
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute())
+        {
+            if($UserID == $stmt->fetchColumn()) return TRUE;
+            else return FALSE;
+        }
+        else return 'Error';
+    }
+
+    public function getEventProperties($EventID)
+    {
+        $query = "SELECT EventID,Name,Location,Starttime,Endtime,MeetingPoint,Description,Status,MaxParticipants,Transport FROM event WHERE EventID = :EventID";
+        $PDO = $this->PDO;
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute()) return $stmt->fetchAll();
+        else return 'Error';
+    }
 }
 

@@ -35,7 +35,7 @@ class group
         else return False;
     }
 
-    public function  createGroupID()
+    public function createGroupID()
     {
         $query = "SELECT GroupID FROM group WHERE GroupID=:GroupID";
         $PDO = $this->PDO;
@@ -86,6 +86,20 @@ class group
 
     }
 
+    #region Change-Methoden
+
+    public function setValue($Param,$Value,$GroupID,$UserID)
+    {
+        if($this->isGroupAdmin($UserID,$GroupID)){
+            $query = "UPDATE group SET :Param = :Value WHERE GroupID=:GroupID";
+            $PDO = $this->PDO;
+            $stmt = $PDO->prepare($query);
+            $stmt->bindParam(":Param",$Param,$PDO::PARAM_STR);
+            $stmt->bindParam(":Value",$Value,$PDO::PARAM_STR);
+            $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        }
+    }
+
     public function changeName($GroupID,$Name)
     {
         $query = "UPDATE group SET Name=:Name WHERE GroupID = :GroupID";
@@ -129,6 +143,8 @@ class group
         if($stmt->execute()) return 'Successful';
         else return 'Error';
     }
+
+    #endregion
 
     public function addMember($GroupID,$UserID)
     {
