@@ -30,7 +30,7 @@ class group
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         if($stmt->execute())
         {
-
+            if($stmt->fetchColumn() == $UserID) return TRUE;
         }
         else return False;
     }
@@ -67,6 +67,22 @@ class group
 
     public function deleteGroup($GroupID,$UserID)
     {
+        if($this->isGroupAdmin($UserID,$GroupID))
+        {
+            $PDO = $this->PDO;
+            $query = "DELETE FROM group WHERE GroupID = :GroupID";
+            $stmt = $PDO->prepare($query);
+            $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+            if($stmt->execute()){
+                $query = "DELETE FROM groupmember WHERE GroupID = :GroupID";
+                $stmt = $PDO->prepare($query);
+                $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+                if($stmt->execute()) return 'Successful';
+                else return 'Error';
+            }
+            else return 'Error';
+        }
+        else return 'User is no Admin';
 
     }
 
@@ -116,16 +132,36 @@ class group
 
     public function addMember($GroupID,$UserID)
     {
-
+        $PDO = $this->PDO;
+        $query = "INSERT INTO groupmember(`GroupID`,`UserID`) VALUES (':GroupID',':UserID')";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()) return 'Successful';
+        else return 'Error';
     }
 
     public function deleteMember($GroupID,$UserID)
     {
-
+        $PDO = $this->PDO;
+        $query = "DELETE FROM groupmember WHERE GroupID =:GroupID AND UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()) return 'Successful';
+        else return 'Error';
     }
 
     public function getGroupsForUser($UserID)
     {
-
+        $PDO = $this->PDO;
+        $query ="SELECT GroupID FROM groupmember WHERE UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+        $return = $stmt->fetchAll();
+            return $return;
+        }
+        else return 'Error';
     }
 }
