@@ -115,7 +115,7 @@ class location
         $query = "SELECT LocationID FROM location WHERE OwnerID = :OwnerID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":OwnerID",$UserID,$PDO::PARAM_INT);
-        if($stmt->execute()) return $stmt->fetchAll();
+        if($stmt->execute()) return $stmt->fetchAll($PDO::FETCH_COLUMN,0);
         else return 'Error';
     }
     /*

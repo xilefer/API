@@ -180,7 +180,7 @@ class group
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()){
-        $return = $stmt->fetchAll();
+        $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
             return $return;
         }
         else return 'Error';
@@ -192,7 +192,7 @@ class group
         $query = "SELECT GroupID FROM group WHERE OwnerID = :OwnerID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":OnwerID",$UserID,$PDO::PARAM_INT);
-        if($stmt->execute()) return $stmt->fetchAll();
+        if($stmt->execute()) return $stmt->fetchAll($PDO::FETCH_COLUMN,0);
         else return 'Error';
     }
 }
