@@ -163,10 +163,10 @@ private $PDO;
 
     }
 
-    private function getProperty($Username,$Property)
+    private function getProperty($UserID,$Property)
     {
         $PDO=$this->PDO;
-        $query = "SELECT `$Property` FROM `user` WHERE `Username`='$Username'";
+        $query = "SELECT `$Property` FROM `user` WHERE `UserID`='$UserID'";
         $Value=$PDO->query($query)->fetchColumn(0);
         return $Value;
     }
@@ -174,6 +174,7 @@ private $PDO;
     public function activateAccount($Username,$Token)
     {
         $PDO = $this->PDO;
+
         $UserToken=$this->getProperty($Username,'ActivateToken');
         if($Token==$UserToken) {
             $query = "UPDATE `user` SET `Activated`='TRUE' WHERE `Username`= '$Username'";
@@ -189,12 +190,12 @@ private $PDO;
 
     }
 
-    public function setValue($Username,$Table,$Value)
+    public function setValue($UserID,$Table,$Value)
     {
         $PDO=$this->PDO;
 
 
-        $query = "UPDATE `user` SET `$Table`='$Value' WHERE `Username`= '$Username'";
+        $query = "UPDATE `user` SET `$Table`='$Value' WHERE `UserID`= '$UserID'";
         $PDO->query($query);
         $check= $this->getProperty($Username,$Table);
         if($check==$Value)
@@ -228,5 +229,12 @@ private $PDO;
             return 'Error';
         }*/
 
+    }
+
+    public function getUserID($Username){
+        $PDO = $this->PDO;
+        $query = "SELECT `UserID` FROM `user` WHERE `Username`= '$Username'";
+        $UserID=$PDO->query($query)->fetchColumn(0);
+        return $UserID;
     }
 }
