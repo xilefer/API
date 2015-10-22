@@ -24,13 +24,14 @@ class group
 
     public function isGroupAdmin($UserID,$GroupID)
     {
-        $query="SELECT OwnerID FROM group WHERE GroupID = :GroupID";
+        $query="SELECT Owner FROM `group` WHERE GroupID = :GroupID";
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         if($stmt->execute())
         {
-            if($stmt->fetchColumn() == $UserID) return TRUE;
+            $result=$stmt->fetchColumn();
+            if($result == $UserID) return TRUE;
         }
         else return False;
     }
@@ -52,25 +53,26 @@ class group
         $GroupID = $this->createGroupID();
         $CreationTime = date('Y-n-d G:i:s');
         $PDO = $this->PDO;
-        $query = "INSERT INTO group (GroupID,Name,Owner,MaxMembers,CreationDate,ModificationDate,Accessibility)VALUES (`:GroupID`,`:Name`,`:OwnerID`,`:MaxMembers`,`:CreationTime`,`:ModificationTime`,`:Accessibility`)";
+        $query = "INSERT INTO `group` (`GroupID`,`GroupName`,`Owner`,`MaxMembers`,`CreationDate`,`ModificationDate`,`Accessibility`)VALUES (':GroupID',':Name',':OwnerID',':MaxMembers',':CreationTime',':ModificationTime',':Accessibility')";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         $stmt->bindParam(":Name",$Name,$PDO::PARAM_STR);
         $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
         $stmt->bindParam(":MaxMembers",$MaxMembers,$PDO::PARAM_INT);
         $stmt->bindParam(":CreationTime",$CreationTime,$PDO::PARAM_STR);
-        $stmt->bindParam(":ModifiactionTime",$CreationTime,$PDO::PARAM_STR);
+        $stmt->bindParam(":ModificationTime",$CreationTime,$PDO::PARAM_STR);
         $stmt->bindParam(":Accessibility",$Accessibility,$PDO::PARAM_STR);
+
         if($stmt->execute()) return 'Successful';
         else return 'Error';
-    }
+    }//Index
 
     public function deleteGroup($GroupID,$UserID)
     {
-        if($this->isGroupAdmin($UserID,$GroupID))
+        if($this->isGroupAdmin($UserID,$GroupID) == TRUE)
         {
             $PDO = $this->PDO;
-            $query = "DELETE FROM group WHERE GroupID = :GroupID";
+            $query = "DELETE FROM `group` WHERE GroupID = :GroupID";
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
             if($stmt->execute()){
@@ -84,11 +86,11 @@ class group
         }
         else return 'User is no Admin';
 
-    }
+    }//Index
 
-    #region Change-Methoden
+    #region Change-Methoden //Index
 
-    public function setValue($Param,$Value,$GroupID,$UserID)
+    public function setValue($Param,$Value,$GroupID,$UserID)//Index
     {
         if($this->isGroupAdmin($UserID,$GroupID)){
             $query = "UPDATE group SET :Param = :Value WHERE GroupID=:GroupID";
@@ -97,6 +99,8 @@ class group
             $stmt->bindParam(":Param",$Param,$PDO::PARAM_STR);
             $stmt->bindParam(":Value",$Value,$PDO::PARAM_STR);
             $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+            if($stmt->execute()) return 'Successful';
+            else return 'Error';
         }
     }
 
@@ -155,7 +159,7 @@ class group
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()) return 'Successful';
         else return 'Error';
-    }
+    }//Index
 
     public function deleteMember($GroupID,$UserID)
     {
@@ -166,8 +170,9 @@ class group
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()) return 'Successful';
         else return 'Error';
-    }
+    }//Index
 
+    //Gibt alle GroupID`s zurück in denen der User ist
     public function getGroupsForUser($UserID)
     {
         $PDO = $this->PDO;
@@ -178,6 +183,16 @@ class group
         $return = $stmt->fetchAll();
             return $return;
         }
+        else return 'Error';
+    }//Index
+    //Gibtt alle GroupID`s zurück die dem User gehören
+    public function getGroupsWhereUserIsOwner($UserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT GroupID FROM group WHERE OwnerID = :OwnerID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":OnwerID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()) return $stmt->fetchAll();
         else return 'Error';
     }
 }

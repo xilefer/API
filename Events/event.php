@@ -290,6 +290,26 @@ class Event
         else return 'Error';
     }//Index
 
+    public function getEventsWhereUserIsParticipant($UserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT EventID FROM eventmembers WHERE UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute())return $stmt->fetchAll();
+        else return 'Error';
+    }
+
+    public function getEventsWhereUserIsOwner($UserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT EventID FROM event WHERE OwnerID = :OwnerID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":OwnerID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()) return $stmt->fetchAll();
+        else return 'Error';
+    }
+
     public function getEventMember($EventID)
     {
         $PDO = $this->PDO;

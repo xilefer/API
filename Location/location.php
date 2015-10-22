@@ -54,6 +54,7 @@ class location
         }
         else return 'Error';
     }
+
     public function newLocation($Name,$Description)
     {
         //Ziehen der LocationID
@@ -93,7 +94,7 @@ class location
         else{
             return 'Error';
         }
-    }
+    }//Index
     public function changeValue($Param,$Value,$UserID,$LocationID)
     {
         if($this->isLocationOwner($UserID,$LocationID)){
@@ -107,6 +108,15 @@ class location
             else return 'Error';
         }
         else return 'User is not Locationowner';
+    }
+    public function getLocationsWhereUserIsOwner($UserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT LocationID FROM location WHERE OwnerID = :OwnerID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":OwnerID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()) return $stmt->fetchAll();
+        else return 'Error';
     }
     /*
     public function changeName($LocationID, $Name)
