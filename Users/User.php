@@ -21,11 +21,11 @@ private $PDO;
     }
 
 
-    public function getUser($UserID)
+    public function getUser($Username)
     {
         $database = $this->database;
         $sqlserver = $this->sqlserver;
-        $query = "SELECT * FROM user WHERE UserID = '$UserID'";
+        $query = "SELECT * FROM user WHERE Username = '$Username'";
         $this->PDO->query($query);
         $result= mysql_db_query($database, $query, $sqlserver);
         while ($row = mysql_fetch_object($result)) {
@@ -61,9 +61,18 @@ private $PDO;
         $query = "INSERT INTO `User`(`UserID`, `Username`, `Firstname`, `Lastname`, `Password`, `LoginToken`, `LoginTime`, `Email`,  `Activated`, `ActivateToken` ) VALUES ('$ID','$Username','$Surname','$Lastname','$Password','NULL','NULL','$Email','FALSE','$ActivateToken')";
         mysql_db_query($database, $query, $sqlserver);
         //echo "Successfully created User with the ID $ID<br/>";
-        $this->sendMail($Username);
+        $Mail=$this->sendMail($Username);
         $data=$this->getUser($ID);
-        return $data;
+        if(isset($data->UserID) and $Mail==0)
+        {
+            $return = array('ReturnCode'=>'0'); // Code 0 = Erfolgreich
+            return $return;
+        }
+        elseif(isset($data->UserID) and $Mail==1)
+        {
+            $return = array('ReturnCode'=>'10'); // Code 10 = Email konnte nich verschickt werden
+            return $return;
+        }
     }
 
 
@@ -129,7 +138,6 @@ private $PDO;
             $query = "SELECT `Email` FROM `user` WHERE `Username`='$Username'";
             $email = $PDO->query($query)->fetchColumn(0);
             $Token = $this->getProperty($Username,'ActivateToken');
-            echo $email;
             Try{
                 $mail = New \PHPMailer();
                 $mail->SMTPDebug  = 0;
@@ -145,12 +153,11 @@ private $PDO;
                 $mail->From = "Meet-2-Eat@Mahlzeit.de";
                 $mail->isHTML(true);
                 $mail->Send();
-                $data = array('ReturnCode'=>'0'); // Code 0 = Erfolgreich
-                echo json_encode($data);
+                return 0;
+
             }
             catch (phpMailerexception $e){
-                $data = array('ReturnCode'=>'1'); // Code 1 = Nicht erfolgreich
-                echo json_encode($data);
+                return 1;
             }
 
 
@@ -185,6 +192,8 @@ private $PDO;
     public function setValue($Username,$Table,$Value)
     {
         $PDO=$this->PDO;
+
+
         $query = "UPDATE `user` SET `$Table`='$Value' WHERE `Username`= '$Username'";
         $PDO->query($query);
         $check= $this->getProperty($Username,$Table);
@@ -196,5 +205,28 @@ private $PDO;
         {
             return false;
         }
+    }
+
+    public function deleteUser($Username)
+    {
+        $PDO= $this->PDO;
+        $Userquery = "SELECT `UserID` FROM `user` WHERE `Username` = '$Username'";
+        $UserID = $PDO->query($Userquery)->fetchColumn(0);
+        $query = "DELETE FROM `user` WHERE `Username`='$Username'";
+        $event = new \Events\Event();
+        $group = new \Groups\group();
+        $location = new \Location\location();
+        /*
+        $PDO->query($query);
+        $check=$this->getUser($Username);
+        if($check=='Error')
+        {
+            return 'Success';
+        }
+        else
+        {
+            return 'Error';
+        }*/
+
     }
 }

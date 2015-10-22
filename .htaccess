@@ -3,5 +3,5 @@ RewriteBase /API
 RewriteRule ^(.*)$ index.php
 RewriteCond %{HTTPS} !=on
 RewriteCond %{ENV:HTTPS} !=on
-RewriteRule .* https://91.103.118.84:86%{REQUEST_URI} [R=301,L]
+RewriteRule .* https://jacky.hackergrotte.de:86%{REQUEST_URI} [R=301,L]
 

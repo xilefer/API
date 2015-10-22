@@ -392,7 +392,11 @@ class Event
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if($stmt->execute()) return $stmt->fetchAll();
+        if($stmt->execute()){
+            $data=$stmt->fetchAll($PDO::FETCH_ASSOC);
+            $data[0]['ReturnCode']='0';
+            return $data[0];
+        }
         else return 'Error';
     }//Index
 }

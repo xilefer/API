@@ -115,7 +115,7 @@ switch ($method) {
                         $data = $Events->isParticipant($URIs[4],$URIs[5]);
                         break;
                 }
-                if($data == 'Successful') {
+                if($data != 'Error') {
                     $json = json_encode($data);
                     $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
                     $response->setBody($json);
@@ -283,7 +283,12 @@ switch ($method) {
     case (\enum\Methods::DELETE):
         switch ($URIs[2]) {
             case ("Users"):
-                echo "DeleteUser$URIs[3]";
+                $Key = Array('Username','UserID','Firstname');
+                $Value = Array('Hannelore','1243','Hans');
+                $Test = new json();
+                $data=$Test->jsonArray($Key,$Value);
+                echo json_encode($data);
+                //$Users->deleteUser($URIs[3]);
                 break;
 
             case ('Groups'):
