@@ -137,6 +137,9 @@ switch ($method) {
                     $response->returnResponse();
                 }
                 break;
+            case ('test'):
+                //hier Testmethoden einfügen
+                break;
         }
         break;
 
@@ -345,6 +348,7 @@ switch ($method) {
                 break;
         }
         break;
+
 }
 
 
