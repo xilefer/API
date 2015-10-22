@@ -298,6 +298,10 @@ class Event
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            if(count($data) == 1){
+                $this->deleteEvent($EventID,$DeletedUserID);
+                return 0;
+            }
             foreach($data as $temp){
                 if($temp != $DeletedUserID){
                     $query = "UPDATE `event` SET Owner = :OwnerID WHERE EventID = :EventID";

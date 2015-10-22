@@ -204,6 +204,9 @@ class group
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            if(count($data) == 1){$this->deleteGroup($GroupID.$DeletedUserID);
+            return 0;
+            }
             foreach($data as $temp){
                 if($temp != $DeletedUserID){
                     $query = "UPDATE `group` SET Owner = :OwnerID WHERE GroupID = :GroupID";
