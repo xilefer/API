@@ -290,6 +290,54 @@ class Event
         else return 'Error';
     }//Index
 
+    private function replaceAdminWithParticipant($EventID,$DeletedUserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT UserID FROM `eventmember` WHERE EventID = :EventID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            foreach($data as $temp){
+                if($temp != $DeletedUserID){
+                    $query = "UPDATE `event` SET Owner = :OwnerID WHERE EventID = :EventID";
+                    $stmt = $PDO->prepare($query);
+                    $stmt->bindParam(":OwnerID",$temp,$PDO::PARAM_INT);
+                    $stmt->bindParam(":EventID",$EventID);
+                    if($stmt->execute()) return 0;
+                    else return 1;
+                }
+            }
+            return 0;
+        }
+        else return '1';
+    }
+
+    public function deleteUserFromEvent($UserID)
+    {
+        $PDO = $this->PDO;
+        //User als Eventowner
+        $query = "SELECT EventID FROM `event` WHERE Owner = :OwnerID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":OwnerID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            $result = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            foreach($result as $temp){
+
+                $this->replaceAdminWithParticipant($temp,$UserID);
+            }
+        }
+        else return 1;
+        //User asl Eventteilnehmer
+        $query = "DELETE FROM `eventmembers` WHERE UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            return 0;
+        }
+        else return 1;
+    }
+
     public function getEventsWhereUserIsParticipant($UserID)
     {
         $PDO = $this->PDO;

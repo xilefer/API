@@ -195,4 +195,50 @@ class group
         if($stmt->execute()) return $stmt->fetchAll($PDO::FETCH_COLUMN,0);
         else return 'Error';
     }
+
+    private function replaceAdminWithParticipant($GroupID,$DeletedUserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT UserID FROM groupmember WHERE GroupID = :GroupID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            foreach($data as $temp){
+                if($temp != $DeletedUserID){
+                    $query = "UPDATE `group` SET Owner = :OwnerID WHERE GroupID = :GroupID";
+                    $stmt = $PDO->prepare($query);
+                    $stmt->bindParam(":OwnerID",$temp,$PDO::PARAM_INT);
+                    $stmt->bindParam(":GroupID",$GroupID);
+                    if($stmt->execute()) return 0;
+                    else return 1;
+                }
+            }
+            return 0;
+        }
+        else return '1';
+    }
+
+    public function deleteUserFromGroup($UserID)
+    {
+        //Gruppenowner
+        $PDO = $this->PDO;
+        $query = "SELECT GroupID FROM `group` WHERE Owner = :Owner";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":Owner",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            foreach($data as $temp)
+            {
+                $this->replaceAdminWithParticipant($temp,$UserID);
+            }
+            return 1;
+        }
+        //Als Teilnehmer aus der Gruppe löschen
+        $query = "DELETE FROM `groupmember` WHERE UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute()) return 0;
+        else return 1;
+    }
 }
