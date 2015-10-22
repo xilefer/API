@@ -43,7 +43,7 @@ class group
         $stmt = $PDO->prepare($query);
         do{
             $rand = rand(0,99999999999);
-            $stmt->bindParam(":GroupID",$rand,$PDO::PARAM_INT);
+            $stmt->bindParam(':GroupID',$rand,$PDO::PARAM_INT);
         }while($stmt->execute());
         return $rand;
     }
@@ -52,11 +52,12 @@ class group
     {
         $GroupID = $this->createGroupID();
         $CreationTime = date('Y-n-d G:i:s');
+        echo $GroupID,$CreationTime;
         $PDO = $this->PDO;
-        $query = "INSERT INTO `group` (`GroupID`,`GroupName`,`Owner`,`MaxMembers`,`CreationDate`,`ModificationDate`,`Accessibility`)VALUES (':GroupID',':Name',':OwnerID',':MaxMembers',':CreationTime',':ModificationTime',':Accessibility')";
+        $query = "INSERT INTO `group` (`GroupID`,`GroupName`,`Owner`,`MaxMembers`,`CreationDate`,`ModificationDate`,`Accessibility`)VALUES (:GroupID,:Penis,:OwnerID,:MaxMembers,:CreationTime,:ModificationTime,:Accessibility)";
         $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
-        $stmt->bindParam(":Name",$Name,$PDO::PARAM_STR);
+        $stmt->bindParam(':GroupID', $GroupID, $PDO::PARAM_INT);
+        $stmt->bindParam(":Penis",$Name,$PDO::PARAM_STR);
         $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
         $stmt->bindParam(":MaxMembers",$MaxMembers,$PDO::PARAM_INT);
         $stmt->bindParam(":CreationTime",$CreationTime,$PDO::PARAM_STR);
