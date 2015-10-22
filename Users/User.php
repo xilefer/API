@@ -36,11 +36,12 @@ private $PDO;
         }
         if(isset($ID))
         {
-            $data = array('UserID' => "$ID", 'Benutzername' => "$User", 'Vorname' => "$Surname", 'Nachname' => "$Lastname");
+            $data = array('UserID' => "$ID", 'Benutzername' => "$User", 'Vorname' => "$Surname", 'Nachname' => "$Lastname",'ReturnCode' => '0');
             return $data;
         }
         else
         {
+            //$data = array('ReturnCode' => '12');
             return 'Error';
         }
     }
@@ -51,7 +52,7 @@ private $PDO;
         $sqlserver = $this->sqlserver;
         if($this->checkUser($Username))
         {
-            return '1';
+            return 1;
         }
         do{
             $ID = rand(1, 1000000);
@@ -65,13 +66,11 @@ private $PDO;
         $data=$this->getUser($ID);
         if(isset($data->UserID) and $Mail==0)
         {
-            $return = array('ReturnCode'=>'0'); // Code 0 = Erfolgreich
-            return $return;
+            return 2;
         }
         elseif(isset($data->UserID) and $Mail==1)
         {
-            $return = array('ReturnCode'=>'10'); // Code 10 = Email konnte nich verschickt werden
-            return $return;
+            return 0;
         }
     }
 
@@ -193,11 +192,9 @@ private $PDO;
     public function setValue($UserID,$Table,$Value)
     {
         $PDO=$this->PDO;
-
-
         $query = "UPDATE `user` SET `$Table`='$Value' WHERE `UserID`= '$UserID'";
         $PDO->query($query);
-        $check= $this->getProperty($Username,$Table);
+        $check= $this->getProperty($UserID,$Table);
         if($check==$Value)
         {
             return true;

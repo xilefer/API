@@ -49,16 +49,18 @@ elseif($URIs[2]=="Users" and $URIs[3]=="activate")
 }
 else
 {
-    $body="ERROR 401 - Unauthorized";
-    $response->setBody($body);
+    $data = array('ReturnCode' => '14');
+    $response->setBody($data);
     $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
+    $response->registerHeader(\enum\headerfields::CONTENT_TYPE,'application/json');
     $response->returnResponse();
     exit;
 }
 
 if($Auth == 'Error')
 {
-    $response->setBody("Wrong Username or Password");
+    $data = array('ReturnCode' => '13');
+    $response->setBody($data);
     $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
     $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
     $response->returnResponse();
@@ -72,6 +74,8 @@ switch ($method) {
                 $data=$Users->getUser($URIs[3]);
                 if($data == 'Error')
                 {
+                    $return = json_encode(array('ReturnCode' => '12'));
+                    $response->setBody($return);
                     $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
                     $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
                     $response->returnResponse();
@@ -79,7 +83,7 @@ switch ($method) {
                 else {
                     $json = json_encode($data);
                     $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application\json');
-                    $response->setBody("$json");
+                    $response->setBody($json);
                     $response->setStatuscode(\enum\statuscodes::OK);
                     $response->returnResponse();
                 }
@@ -146,19 +150,37 @@ switch ($method) {
     case (\enum\Methods::PUT):
         switch ($URIs[2]) {
             case ("Users"):
-                $data=$Users->newUser($URIs[3],$URIs[4],$URIs[5],$URIs[6],$URIs[7]);
-                if($data==1)
-                {
+                if(count($URIs) != 8) {
+                    $return= json_encode(array('ReturnCode' => '15'));
+                    $response->setBody($return);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
                     $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
                     $response->returnResponse();
                 }
-                else
-                {
-                    $json = json_encode($data);
-                    $response->setStatuscode(\enum\statuscodes::CREATED);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->setBody($json);
-                    $response->returnResponse();
+                else {
+                    $data = $Users->newUser($URIs[3], $URIs[4], $URIs[5], $URIs[6], $URIs[7]);
+                    if ($data == 1) {
+                        $return= json_encode(array('ReturnCode' => '11'));
+                        $response->setBody($return);
+                        $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
+                        $response->returnResponse();
+                    }
+                    elseif($data == 2)
+                    {
+                        $return= json_encode(array('ReturnCode' => '10'));
+                        $response->setBody($return);
+                        $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
+                        $response->returnResponse();
+                    }
+                    else {
+                        $return= json_encode(array('ReturnCode' => '0'));
+                        $response->setStatuscode(\enum\statuscodes::CREATED);
+                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
+                        $response->setBody($return);
+                        $response->returnResponse();
+                    }
                 }
                 break;
 
@@ -222,21 +244,31 @@ switch ($method) {
     case (\enum\Methods::POST):
         switch ($URIs[2]) {
             case ("Users"):
-                        $code=$Users->setValue($URIs[3],$URIs[4],$URIs[5]);
-                        if($code)
-                        {
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }
-                        else
-                        {
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }
-
-
+                $main = new \enum\tables\main();
+                if($main->isValidColumn(\enum\tables\tablenames::User,$URIs[4])) {
+                    $code = $Users->setValue($URIs[3], $URIs[4], $URIs[5]);
+                    if ($code) {
+                        $return= json_encode(array('ReturnCode'=>'0'));
+                        $response->setBody($return);
+                        $response->setStatuscode(\enum\statuscodes::OK);
+                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
+                        $response->returnResponse();
+                    } else {
+                        $return= json_encode(array('ReturnCode'=>'17'));
+                        $response->setBody($return);
+                        $response->setStatuscode(\enum\statuscodes::INTERNAL_SERVER_ERROR);
+                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
+                        $response->returnResponse();
+                    }
+                }
+                else
+                {
+                    $return= json_encode(array('ReturnCode'=>'16'));
+                    $response->setBody($return);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
                 break;
 
             case ('Groups'):

@@ -22,5 +22,10 @@ class returncodes extends Enum{
     const Error_Usernamealreadyexits = 11;
     const Error_UserDoesnotexist = 12;
     const Error_WrongUsernameorPassword = 13;
+    const Error_AuthenticationRequired = 14;
+    const Error_WrongNumberofParameters = 15;
+    const Error_WrongTablename = 16;
+    const Error_Propertycouldnotbeset = 17;
+
 
 }
