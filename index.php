@@ -15,6 +15,7 @@ $response = new \response\response();
 $Users = new \Users\User();
 $Events = new \Events\event();
 $Groups = new \Groups\Group();
+$Locations = new \Location\location();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
@@ -85,11 +86,56 @@ switch ($method) {
                 break;
 
             case ('Groups'):
-                echo "GetGroup$URIs[3]";
+                $data=$Groups->getGroupsForUser($URIs[3]);
+                if($data == 'Error')
+                {
+                    $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
+                    $response->returnResponse();
+                }
+                else {
+                    $json = json_encode($data);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application\json');
+                    $response->setBody("$json");
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->returnResponse();
+                }
                 break;
 
             case ('Events'):
-                echo "GetEvent$URIs[3]";
+                $data = "";
+                switch($URIs[3]){
+                    case ('Properties'):
+                        $data = $Events->getEventProperties($URIs[4]);
+                        break;
+                    case('Groups'):
+                        $data = $Events->getGroupsForEvent($URIs[4]);
+                        break;
+                    case('Participants'):
+                        $data = $Events->isParticipant($URIs[4],$URIs[5]);
+                        break;
+                }
+                if($data == 'Successful') {
+                    $json = json_encode($data);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->setBody($json);
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
+                break;
+            case ('Location'):
+                $data = $Locations->getAllLocations();
+                if($data = 'Successful'){
+                    $json = json_encode($data);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->setBody($json);
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->returnResponse();
+                }
                 break;
         }
         break;
@@ -115,25 +161,58 @@ switch ($method) {
 
 
             case ('Groups'):
-                $data=$Groups->newGroup("TestGruppe",$URIs[3],$URIs[4],$URIs[5]);
-               if($data == 'Error'){
-                   $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                   $response->returnResponse();
-               }
-               else{
-                   $json = json_encode($data);
-                   $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                   $response->setBody($json);
-                   $response->returnResponse();
-               }
-                echo "PutGroup$URIs[3]";
-
+                $data = "";
+                switch($URIs[3]){
+                    case('Group'):
+                        $data=$Groups->newGroup($URIs[4],$URIs[5],$URIs[6],$URIs[7]);
+                        break;
+                    case('Member'):
+                        $data=$Groups->addMember($URIs[4],$URIs[5]);
+                        break;
+                }
+                if($data == 'Error'){
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->returnResponse();
+                }
                 break;
 
             case ('Events'):
+                switch($URIs[3]){
+                    case('Event'):
+                        $date=$Events->newEvent($URIs[4],$URIs[5],$URIs[6],$URIs[7],$URIs[8],$URIs[9],$URIs[10],$URIs[11],$URIs[12],$URIs[13]);
+                        break;
+                    case('Participant'):
+                        $date =$Events->addParticipant($URIs[4],$URIs[5],$URIs[6]);
+                        break;
+                    case('Group'):
+                        $date = $Events->addGroup($URIs[4],$URIs[5]);
+                        break;
+                }
+                if($data == 'Error'){
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::CREATED);
+                    $response->returnResponse();
+                }
                 echo "PutEvent$URIs[3]";
                 break;
-
+            case ('Location'):
+                $data = $Locations->newLocation($URIs[3],$URIs[4]);
+                if($data = 'Successful'){
+                    $response->setStatuscode(\enum\statuscodes::CREATED);
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
+                break;
         }
         break;
 
@@ -158,13 +237,46 @@ switch ($method) {
                 break;
 
             case ('Groups'):
-                echo "PostGroup$URIs[3]";
+                $data = "";
+                $data=$Groups->setValue($URIs[3],$URIs[4],$URIs[5],$URIs[6]);//Index
+                if($data == 'Successful')
+                {
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
+                else
+                {
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
                 break;
 
             case ('Events'):
-                echo "PostEvent$URIs[3]";
+                $data = $Events->setValue($URIs[3],$URIs[4],$URIs[5],$URIs[6]);
+                if($data == 'Successful'){
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
                 break;
-
+            case ('Location'):
+                $data = $Locations->changeValue($URIs[3],$URIs[4],$URIs[5],$URIs[6]);
+                if($data = 'Successful'){
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
+                break;
         }
         break;
 
@@ -175,13 +287,57 @@ switch ($method) {
                 break;
 
             case ('Groups'):
-                echo "DeleteGroup$URIs[3]";
+                $data = "";
+                switch($URIs[3]){
+                    case('Group'):
+                        $data = $Groups->deleteGroup($URIs[4],$URIs[5]);
+                        break;
+                    case('Member'):
+                        $date = $Groups->deleteMember($URIs[4],$URIs[5]);
+                        break;
+                }
+                if($data == 'Error'){
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
                 break;
 
             case ('Events'):
-                echo "DeleteEvent$URIs[3]";
+                $data = "";
+                switch($URIs[3]){
+                    case('Event'):
+                        $data = $Events->deleteEvent($URIs[4],$URIs[5]);
+                        break;
+                    case('Participant'):
+                        $data = $Events->deleteParticipant($URIs[4],$URIs[5]);
+                        break;
+                    case('Group'):
+                        $data = $Events->removeGroup($URIs[4],$URIs[5]);
+                        break;
+                }
+                if($data == 'Successful'){
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
+                    $response->returnResponse();
+                }
                 break;
-
+            case ('Location'):
+                $data = $Locations->deleteLocation($URIs[3],$URIs[4]);
+                if($data = 'Successful'){
+                    $response->setStatuscode(\enum\statuscodes::OK);
+                    $response->returnResponse();
+                }
+                else{
+                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
+                    $response->returnResponse();
+                }
+                break;
         }
         break;
 }
