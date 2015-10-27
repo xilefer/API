@@ -20,6 +20,7 @@ $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
 $return = new \methodreturn\createreturn();
+$main = new \enum\tables\main();
 if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
 {
     $Username=$_SERVER['PHP_AUTH_USER'];
@@ -178,6 +179,8 @@ switch ($method) {
                 }
                 break;
             case ('test'):
+                $Test = $Events->deleteUserFromEvent(1);
+                echo $Test;
                 //hier Testmethoden einfügen
                 break;
         }
@@ -187,35 +190,19 @@ switch ($method) {
         switch ($URIs[2]) {
             case ("Users"):
                 if(count($URIs) != 8) {
-                    $return= json_encode(array('ReturnCode' => '15'));
-                    $response->setBody($return);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->returnResponse();
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                 }
                 else {
                     $data = $Users->newUser($URIs[3], $URIs[4], $URIs[5], $URIs[6], $URIs[7]);
                     if ($data == 1) {
-                        $return= json_encode(array('ReturnCode' => '11'));
-                        $response->setBody($return);
-                        $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                        $response->returnResponse();
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_Usernamealreadyexits);
                     }
                     elseif($data == 2)
                     {
-                        $return= json_encode(array('ReturnCode' => '10'));
-                        $response->setBody($return);
-                        $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                        $response->returnResponse();
+                        $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_Emailnotsent);
                     }
                     else {
-                        $return= json_encode(array('ReturnCode' => '0'));
-                        $response->setStatuscode(\enum\statuscodes::CREATED);
-                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                        $response->setBody($return);
-                        $response->returnResponse();
+                        $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                     }
                 }
                 break;
@@ -373,33 +360,20 @@ switch ($method) {
         break;
 
     case (\enum\Methods::POST):
-        $main = new \enum\tables\main();
+
         switch ($URIs[2]) {
             case ("Users"):
-                //$main = new \enum\tables\main();
                 if($main->isValidColumn(\enum\tables\tablenames::User,$URIs[4])) {
                     $code = $Users->setValue($URIs[3], $URIs[4], $URIs[5]);
                     if ($code) {
-                        $return= json_encode(array('ReturnCode'=>'0'));
-                        $response->setBody($return);
-                        $response->setStatuscode(\enum\statuscodes::OK);
-                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                        $response->returnResponse();
+                        $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
                     } else {
-                        $return= json_encode(array('ReturnCode'=>'17'));
-                        $response->setBody($return);
-                        $response->setStatuscode(\enum\statuscodes::INTERNAL_SERVER_ERROR);
-                        $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                        $response->returnResponse();
+                        $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_Propertycouldnotbeset);
                     }
                 }
                 else
                 {
-                    $return= json_encode(array('ReturnCode'=>'16'));
-                    $response->setBody($return);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->returnResponse();
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_InvalidTablename);
                 }
                 break;
 
@@ -461,12 +435,17 @@ switch ($method) {
     case (\enum\Methods::DELETE):
         switch ($URIs[2]) {
             case ("Users"):
-                $Key = Array('Username','UserID','Firstname');
-                $Value = Array('Hannelore','1243','Hans');
-                $Test = new json();
-                $data=$Test->jsonArray($Key,$Value);
-                echo json_encode($data);
-                //$Users->deleteUser($URIs[3]);
+                $delete = $Users->deleteUser($URIs[3]);
+                if($delete==0)
+                {
+                    $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                }
+                elseif($delete==2){
+                    $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_UserDoesnotexist);
+                }
+                else{
+                    $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_Usercouldnotbedeleted);
+                }
                 break;
 
             case ('Groups'):

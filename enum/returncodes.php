@@ -26,8 +26,9 @@ class returncodes extends Enum{
     const Error_WrongUsernameorPassword = 13;
     const Error_AuthenticationRequired = 14;
     const Error_WrongNumberofParameters = 15;
-    const Error_WrongTablename = 16;
+    const Error_InvalidTablename = 16;
     const Error_Propertycouldnotbeset = 17;
+    const Error_Usercouldnotbedeleted = 18;
 
 
     //EventErrorCodes:
