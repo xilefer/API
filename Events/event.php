@@ -36,7 +36,8 @@ class Event
         do{
             $rand = rand(0,99999999999);
             $stmt->bindParam(":EventID",$rand,$PDO::PARAM_INT);
-        }while($stmt->execute());
+            $stmt->execute();
+        }while($stmt->rowCount() != 0);
         return $rand;
     }
 
@@ -95,9 +96,9 @@ class Event
     //Methode darf nur vom GroupOwner ausgeführt werden
     public function deleteEvent($EventID, $OwnerID)
     {
-        if($this->isGroupAdmin($OwnerID,$EventID))
+        if($this->isEventOwner($OwnerID,$EventID))
         {
-            $query = "DELETE  FROM event WHERE EventID = :EventID AND OwnerID = :OwnerID";
+            $query = "DELETE  FROM event WHERE EventID = :EventID AND Owner = :OwnerID";
             $PDO = $this->PDO;
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
@@ -135,106 +136,6 @@ class Event
         }
         else return 'User is not Groupadmin';
     }//Index
-/*
-    public function changeName($Name, $EventID)
-    {
-        $query = "UPDATE event SET Name = :Name WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID, $PDO::PARAM_INT);
-        $stmt->bindParam(":Name",$Name,$PDO::PARAM_STR);
-        if ($stmt->execute()) {
-            return 'Successful';
-        } else return 'Error';
-    }
-
-    public function changeLocation($LocationID, $EventID)
-    {
-        $query = "UPDATE event SET Location = :LocationID WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":LocationID",$LocationID,$PDO::PARAM_INT);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if ($stmt->execute()) {
-            return 'Successful';
-        } else return 'Error';
-    }
-
-    public function changeStarttime($EventID, $Starttime){
-        $query = "UPDATE event SET Starttime = :Starttime WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt=$PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        $stmt->bindParam(":Starttime",$Starttime,$PDO::PARAM_STR);
-        if($stmt->execute() == FALSE) return 'Error';
-        else return 'Successful';
-    }
-
-    public function changeEndtime($Endtime, $EventID)
-    {
-        $query = "UPDATE event SET Endtime = :Endtime WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        $stmt->bindParam(":Endtime",$Endtime,$PDO::PARAM_STR);
-        if($stmt->execute() == FALSE) return 'Error';
-        else return 'Successful';
-    }
-
-    public function changeDescription($Description, $EventID)
-    {
-        $query = "UPDATE event SET Description = $Description WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if ($stmt->execute()) return 'Successful';
-        else return 'Error';
-    }
-
-    public function changeMeetingPoint($MeetingPoint, $EventID)
-    {
-        $query = "UPDATE event SET MeetingPoint = $MeetingPoint WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if ($stmt->execute()) return 'Successful';
-        else return 'Error';
-    }
-
-    public function changeStatus($UserID, $EventID, $Status)
-    {
-        $query = "UPDATE eventmembers SET Status = :Status WHERE UserID = :UserID AND EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":Status",$Status,$PDO::PARAM_STR);
-        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if($stmt->execute()) return 'Successful';
-        else return 'Error';
-    }
-
-    public function changeTransport($EventID, $Transport)
-    {
-        $query = "UPDATE event SET Transport = :Transport WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":Transport",$Transport,$PDO::PARAM_STR);
-        $stmt->bindParam(":EventID", $EventID,$PDO::PARAM_INT);
-        if($stmt->execute() == FALSE) return 'Error';
-        else return 'Successful';
-    }
-
-    public function changeMaxParticipants($MaxParticipants, $EventID)
-    {
-        $query = "UPDATE event SET MaxParticipants = :MaxParticipants WHERE EventID =:EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":MaxParticipants",$MaxParticipants,$PDO::PARAM_INT);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if($stmt->execute() == false) return 'Error';
-        else return 'Successful';
-    }
-*/
 
 #endregion
 
@@ -242,22 +143,42 @@ class Event
 
     public function addParticipant($UserID, $EventID, $Status)
     {
-        //Evtl. Noch auf PDO umstellen
         $PDO = $this->PDO;
-        $query = "SELECT MaxParticipants FROM event WHERE EventID = :EventID";
-        $result = mysql_db_query($this->database,$query,$this->sqlserver);
-        $query = "SELECT * FROM eventmembers WHERE EventID=$EventID";
-        $result1 = mysql_db_query($this->database,$query,$this->sqlserver);
-        if(mysql_affected_rows($result1) == $result) return 'Reached MaxParticipants';
 
-        $query = "SELECT * FROM eventmebmers WHERE UserID = $UserID AND EventID = $EventID";
-        if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) == 0) {
-            $query = "INSERT INTO `eventmembers`(`UserID`, `EventID`, `Status`) VALUES ('$UserID','$EventID', '$Status')";
-            if (mysql_affected_rows(mysql_db_query($this->database, $query, $this->sqlserver)) != 1) return 'Error';
-            else return 'Successful';
-        } else {
-            return 'Eventmember already existing';
+        $query = "SELECT MaxParticipants FROM event WHERE EventID = :EventID";
+        $stmt1 = $PDO->prepare($query);
+        $stmt1->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt1->execute()){
+            $query = "SELECT * FROM eventmembers WHERE EventID=:EventID";
+            $stmt2= $PDO->prepare($query);
+            $stmt2->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+            if($stmt2->execute()){
+                $rows2 = $stmt2->rowCount();
+                $Value1 = $stmt1->fetchColumn();
+                if($rows2 == $Value1) return 'Reached MaxParticipants';
+
+                $query = "SELECT * FROM eventmembers WHERE UserID = :UserID AND EventID = :EventID";
+                $stmt3 = $PDO->prepare($query);
+                $stmt3->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+                $stmt3->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+                if($stmt3->execute()){
+                    if ($stmt3->rowCount() == 0) {
+                        $query = "INSERT INTO `eventmembers`(`UserID`, `EventID`, `Status`) VALUES (:UserID,:EventID, :Status)";
+                        $stmt4 = $PDO->prepare($query);
+                        $stmt4->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+                        $stmt4->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+                        $stmt4->bindParam(":Status",$Status,$PDO::PARAM_STR);
+                        if($stmt4->execute()) return 'Successful';
+                    } else {
+                        return 'Eventmember already existing';
+                    }
+                }
+
+
+            }
+
         }
+
     }//Index
 
     public function deleteParticipant( $EventID, $UserID) // Admin darf jeden löschen
@@ -303,10 +224,10 @@ class Event
         else return 'Error';
     }//Index
 
-    private function replaceAdminWithParticipant($EventID,$DeletedUserID)
+    public function replaceAdminWithParticipant($EventID,$DeletedUserID)
     {
         $PDO = $this->PDO;
-        $query = "SELECT UserID FROM `eventmember` WHERE EventID = :EventID";
+        $query = "SELECT UserID FROM `eventmembers` WHERE EventID = :EventID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()){
@@ -327,7 +248,9 @@ class Event
             }
             return 0;
         }
-        else return '1';
+        else{
+            return '1';
+        }
     }
 
     public function deleteUserFromEvent($UserID)
@@ -340,12 +263,11 @@ class Event
         if($stmt->execute()){
             $result = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
             foreach($result as $temp){
-
                 $this->replaceAdminWithParticipant($temp,$UserID);
             }
         }
         else return 1;
-        //User asl Eventteilnehmer
+        //User als Eventteilnehmer
         $query = "DELETE FROM `eventmembers` WHERE UserID = :UserID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);

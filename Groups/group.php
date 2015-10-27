@@ -57,7 +57,8 @@ class group
         do{
             $rand = rand(0,99999999999);
             $stmt->bindParam(':GroupID',$rand,$PDO::PARAM_INT);
-        }while($stmt->execute());
+            $stmt->execute();
+        }while($stmt->rowCount() != 0);
         return $rand;
     }
 
@@ -265,7 +266,9 @@ class group
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
-            if(count($data) == 1){$this->deleteGroup($GroupID.$DeletedUserID);
+            if(count($data) == 1)
+            {
+            $this->deleteGroup($GroupID,$DeletedUserID);
             return 0;
             }
             foreach($data as $temp){
