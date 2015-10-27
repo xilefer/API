@@ -95,7 +95,7 @@ class location
             return 'Error';
         }
     }//Index
-    public function changeValue($Param,$Value,$UserID,$LocationID)
+    public function changeValue($LocationID,$Param,$Value,$UserID)
     {
         if($this->isLocationOwner($UserID,$LocationID)){
             $query="UPDATE location SET :Param = :Value WHERE LocationID = :LocationID";

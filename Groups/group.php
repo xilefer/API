@@ -36,6 +36,19 @@ class group
         else return False;
     }
 
+    private function isPasswordProtected($GroupID){
+        $PDO = $this->PDO;
+        $query = "SELCET Accessibility FROM `group` WHERE GroupID = :GroupID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            $data = $stmt->fetchColumn(0);
+            if($data = "PASSWORD") return TRUE;
+            else return FALSE;
+        }
+        else return 'Error';
+    }
+
     public function createGroupID()
     {
         $query = "SELECT GroupID FROM group WHERE GroupID=:GroupID";
@@ -48,23 +61,51 @@ class group
         return $rand;
     }
 
+    public function newGroupProtected($Name,$OwnerID,$MaxMembers,$Password)
+    {
+        echo "Protected Group";
+        $GroupID = $this->createGroupID();
+        $CreationTime = date('Y-n-d G:i:s');
+        $PDO = $this->PDO;
+        $query = "INSERT INTO `group` (`GroupID`,`GroupName`,`Owner`,`MaxMembers`,`CreationDate`,`ModificationDate`,`Accessibility`,`GroupPassword`) VALUES (:GroupID,:GroupName,:OwnerID,:MaxMembers,:CreationTime,:ModificationTime,'PASSWORD',:Password)";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(':GroupID', $GroupID, $PDO::PARAM_INT);
+        $stmt->bindParam(":GroupName",$Name,$PDO::PARAM_STR);
+        $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
+        $stmt->bindParam(":MaxMembers",$MaxMembers,$PDO::PARAM_INT);
+        $stmt->bindParam(":CreationTime",$CreationTime,$PDO::PARAM_STR);
+        $stmt->bindParam(":ModificationTime",$CreationTime,$PDO::PARAM_STR);
+        $stmt->bindParam(":Password",$Password,$PDO::PARAM_STR);
+        if($stmt->execute())
+        {
+            //Owner als Mitglied setzen
+            $this->addMember($GroupID,$OwnerID);
+            return 'Successful';
+        }
+        else return 'Error';
+    }
+
     public function newGroup($Name,$OwnerID,$MaxMembers,$Accessibility)
     {
         $GroupID = $this->createGroupID();
         $CreationTime = date('Y-n-d G:i:s');
-        echo $GroupID,$CreationTime;
         $PDO = $this->PDO;
-        $query = "INSERT INTO `group` (`GroupID`,`GroupName`,`Owner`,`MaxMembers`,`CreationDate`,`ModificationDate`,`Accessibility`)VALUES (:GroupID,:Penis,:OwnerID,:MaxMembers,:CreationTime,:ModificationTime,:Accessibility)";
+        $query = "INSERT INTO `group` (`GroupID`,`GroupName`,`Owner`,`MaxMembers`,`CreationDate`,`ModificationDate`,`Accessibility`,`GroupPassword`)VALUES (:GroupID,:GroupName,:OwnerID,:MaxMembers,:CreationTime,:ModificationTime,:Accessibility,'')";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(':GroupID', $GroupID, $PDO::PARAM_INT);
-        $stmt->bindParam(":Penis",$Name,$PDO::PARAM_STR);
+        $stmt->bindParam(":GroupName",$Name,$PDO::PARAM_STR);
         $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
         $stmt->bindParam(":MaxMembers",$MaxMembers,$PDO::PARAM_INT);
         $stmt->bindParam(":CreationTime",$CreationTime,$PDO::PARAM_STR);
         $stmt->bindParam(":ModificationTime",$CreationTime,$PDO::PARAM_STR);
         $stmt->bindParam(":Accessibility",$Accessibility,$PDO::PARAM_STR);
 
-        if($stmt->execute()) return 'Successful';
+        if($stmt->execute())
+        {
+            //Owner als Mitglied setzen
+            $this->addMember($GroupID,$OwnerID);
+            return 'Successful';
+        }
         else return 'Error';
     }//Index
 
@@ -91,13 +132,13 @@ class group
 
     #region Change-Methoden //Index
 
-    public function setValue($Param,$Value,$GroupID,$UserID)//Index
+    public function setValue($GroupID,$Table,$Value,$UserID)//Index
     {
         if($this->isGroupAdmin($UserID,$GroupID)){
             $query = "UPDATE group SET :Param = :Value WHERE GroupID=:GroupID";
             $PDO = $this->PDO;
             $stmt = $PDO->prepare($query);
-            $stmt->bindParam(":Param",$Param,$PDO::PARAM_STR);
+            $stmt->bindParam(":Param",$Table,$PDO::PARAM_STR);
             $stmt->bindParam(":Value",$Value,$PDO::PARAM_STR);
             $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
             if($stmt->execute()) return 'Successful';
@@ -151,10 +192,28 @@ class group
 
     #endregion
 
-    public function addMember($GroupID,$UserID)
+    public function addMemberProtected($GroupID,$Password,$UserID)
     {
         $PDO = $this->PDO;
-        $query = "INSERT INTO groupmember(`GroupID`,`UserID`) VALUES (':GroupID',':UserID')";
+        $query = "SELECT GroupPassword FROM `group` WHERE GroupID = :GroupID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID);
+        if($stmt->execute()){
+            $GroupPassword = $stmt->fetchColumn(0);
+            if($GroupPassword == $Password) {
+                echo "Correct 'Password";
+                $this->addMember($GroupID,$UserID);
+            }
+            else return 'Wrong Password';
+        }
+        else return 'Error';
+    }
+
+    public function addMember($GroupID,$UserID)
+    {
+        if($this->isPasswordProtected($GroupID)) return "Group is Protected, please use /Groups/Protected";
+        $PDO = $this->PDO;
+        $query = "INSERT INTO groupmember(`GroupID`,`UserID`) VALUES (:GroupID,:UserID)";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
@@ -162,7 +221,7 @@ class group
         else return 'Error';
     }//Index
 
-    public function deleteMember($GroupID,$UserID)
+    public function deleteMember($GroupID,$UserID) // Admin darf alle löschen!
     {
         $PDO = $this->PDO;
         $query = "DELETE FROM groupmember WHERE GroupID =:GroupID AND UserID = :UserID";
@@ -182,6 +241,7 @@ class group
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()){
         $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            $return['ReturnCode'] = 0;
             return $return;
         }
         else return 'Error';

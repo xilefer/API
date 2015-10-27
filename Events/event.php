@@ -60,8 +60,20 @@ class Event
         //Ermitteln der EventID
         $PDO = $this->PDO;
         $EventID = $this->createEventID();
-        $query = "INSERT INTO event(`EventID`,`Name`,`Location`,`Starttime`,`Endtime`,`Participants`,`MeetingPoint`,`Description`,`Owner`,`Status`,`MaxParticipants`,`Transport`) VALUES('$EventID','$Name','$LocationID','$Starttime','$Endtime','Andere Tabelle','$MeetingPoint','$Description','$OwnerID','$Status','$MaxParticipants','$Transport') ";
+        $query = "INSERT INTO event(`EventID`,`Name`,`Location`,`Starttime`,`Endtime`,`Participants`,`MeetingPoint`,`Description`,`Owner`,`Status`,`MaxParticipants`,`Transport`) VALUES
+          (:EventID,:EventName,:LocationID,:Starttime,:Endtime,'Andere Tabelle',:MeetingPoint,:Description,:OwnerID,:Status,:MaxParticipants,:Transport) ";
         $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        $stmt->bindParam(":EventName",$Name,$PDO::PARAM_STR);
+        $stmt->bindParam(":LocationID",$LocationID,$PDO::PARAM_INT);
+        $stmt->bindParam(":Starttime",$Starttime,$PDO::PARAM_STR);
+        $stmt->bindParam(":Endtime",$Endtime,$PDO::PARAM_STR);
+        $stmt->bindParam(":MeetingPoint",$MeetingPoint,$PDO::PARAM_STR);
+        $stmt->bindParam(":Description",$Description,$PDO::PARAM_STR);
+        $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
+        $stmt->bindParam(":Status",$Status,$PDO::PARAM_STR);
+        $stmt->bindParam(":MaxParticipants",$MaxParticipants,$PDO::PARAM_INT);
+        $stmt->bindParam(":Transport",$Transport,$PDO::PARAM_STR);
         if ($stmt->execute())
         {
             //Owner als Teilnehmer eintragen
@@ -71,7 +83,7 @@ class Event
             }
             else
             {
-                return "Error";
+                return "ErrorParticipant";
             }
         }
         else
@@ -103,11 +115,12 @@ class Event
                 return 'Error';
             }
         }
+        else return 'UserNotEventAdmin';
     }//Index
 
     #region Change-Methoden
 
-    public function setValue($Param,$Value,$EventID,$UserID)
+    public function setValue($EventID,$Param,$Value,$UserID)
     {
         if($this->isEventOwner($UserID,$EventID))
         {
@@ -247,7 +260,7 @@ class Event
         }
     }//Index
 
-    public function deleteParticipant($UserID, $EventID)
+    public function deleteParticipant( $EventID, $UserID) // Admin darf jeden löschen
     {
         $query = "DELETE FROM eventmembers WHERE EventID = :EventID AND UserID = :UserID";
         $PDO = $this->PDO;
@@ -365,7 +378,7 @@ class Event
     public function getEventMember($EventID)
     {
         $PDO = $this->PDO;
-        $query = "SELECT UserID FROM event WHERE EventID = :EventID";
+        $query = "SELECT UserID FROM `eventmember` WHERE EventID = :EventID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()) return $stmt->fetchAll();
