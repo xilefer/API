@@ -19,6 +19,7 @@ $Locations = new \Location\location();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
+$return = new \methodreturn\createreturn();
 if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
 {
     $Username=$_SERVER['PHP_AUTH_USER'];
@@ -50,7 +51,8 @@ elseif($URIs[2]=="Users" and $URIs[3]=="activate")
 else
 {
     $data = array('ReturnCode' => '14');
-    $response->setBody($data);
+    $json=json_encode($data);
+    $response->setBody($json);
     $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
     $response->registerHeader(\enum\headerfields::CONTENT_TYPE,'application/json');
     $response->returnResponse();
@@ -60,7 +62,8 @@ else
 if($Auth == 'Error')
 {
     $data = array('ReturnCode' => '13');
-    $response->setBody($data);
+    $json=json_encode($data);
+    $response->setBody($json);
     $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
     $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
     $response->returnResponse();
@@ -74,18 +77,10 @@ switch ($method) {
                 $data=$Users->getUser($URIs[3]);
                 if($data == 'Error')
                 {
-                    $return = json_encode(array('ReturnCode' => '12'));
-                    $response->setBody($return);
-                    $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
-                    $response->returnResponse();
+                    $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_UserDoesnotexist);
                 }
                 else {
-                    $json = json_encode($data);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application\json');
-                    $response->setBody($json);
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->returnResponse();
+                    $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                 }
                 break;
 
