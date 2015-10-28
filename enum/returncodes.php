@@ -29,6 +29,7 @@ class returncodes extends Enum{
     const Error_InvalidTablename = 16;
     const Error_Propertycouldnotbeset = 17;
     const Error_Usercouldnotbedeleted = 18;
+    const Error_CannotsetValuesofotherUsers= 19;
 
 
     //EventErrorCodes:
@@ -42,6 +43,7 @@ class returncodes extends Enum{
     const Error_CantDeleteEvent = 27;
     const Error_CantDeleteParticipant = 28;
     const Error_CantDeleteGroupFromEvent = 29;
+    const Error_CannotDeleteUserFromEvent = 200;
 
     //GroupErrorCodes:
     const Error_UserNotGroupOwner = 30;
@@ -52,6 +54,7 @@ class returncodes extends Enum{
     const Error_GroupIsPaswwordProtected = 35;
     const Error_CantDeleteGroup = 36;
     const Error_CantDeleteMember = 37;
+    const Error_CannotDeleteUserFromGroup = 38;
 
     //LocationErrorCodes;
     const Error_UserNotLocationOwner = 40;

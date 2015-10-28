@@ -199,6 +199,11 @@ switch ($method) {
                 }
                 break;
             case ('test'):
+                $crypt = password_hash('hanspeter',PASSWORD_BCRYPT);
+                echo $crypt."\n";
+                if(password_verify('hanspeter',$crypt)){
+                    echo 'True';
+                }
                 //hier Testmethoden einfügen
                 break;
         }
@@ -413,8 +418,9 @@ switch ($method) {
 
         switch ($URIs[2]) {
             case ("Users"):
-                if($main->isValidColumn(\enum\tables\tablenames::User,$URIs[4])) {
-                    $code = $Users->setValue($URIs[3], $URIs[4], $URIs[5]);
+                $UserID=$Users->getUserID($Username);
+                if($main->isValidColumn(\enum\tables\tablenames::User,$URIs[3])) {
+                    $code = $Users->setValue($UserID, $URIs[3], $URIs[4]);
                     if ($code) {
                         $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
                     } else {
@@ -494,15 +500,22 @@ switch ($method) {
         switch ($URIs[2]) {
             case ("Users"):
                 $delete = $Users->deleteUser($URIs[3]);
-                if($delete==0)
-                {
-                    $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
-                }
-                elseif($delete==2){
-                    $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_UserDoesnotexist);
-                }
-                else{
-                    $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_Usercouldnotbedeleted);
+                switch ($delete){
+                    case 0:
+                        $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        break;
+                    case 1:
+                        $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_Usercouldnotbedeleted);
+                        break;
+                    case 2:
+                        $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_UserDoesnotexist);
+                        break;
+                    case 3:
+                        $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_CannotDeleteUserFromEvent);
+                        break;
+                    case 4:
+                        $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_CannotDeleteUserFromGroup);
+                        break;
                 }
                 break;
 

@@ -63,9 +63,13 @@ private $Group;
             //echo "$ID<br/>";
         }while($this->checkUserID($ID));
         $ActivateToken=rand(1,999999);
-        $query = "INSERT INTO `User`(`UserID`, `Username`, `Firstname`, `Lastname`, `Password`, `LoginToken`, `LoginTime`, `Email`,  `Activated`, `ActivateToken` ) VALUES ('$ID','$Username','$Surname','$Lastname','$Password','NULL','NULL','$Email','FALSE','$ActivateToken')";
+        $options = [
+            'cost' => 11,
+            'salt' => mcrypt_create_iv(22, MCRYPT_DEV_URANDOM),
+        ];
+        $Crypt = password_hash($Password,PASSWORD_BCRYPT,$options);
+        $query = "INSERT INTO `User`(`UserID`, `Username`, `Firstname`, `Lastname`, `Password`, `LoginToken`, `LoginTime`, `Email`,  `Activated`, `ActivateToken` ) VALUES ('$ID','$Username','$Surname','$Lastname','$Crypt','NULL','NULL','$Email','FALSE','$ActivateToken')";
         mysql_db_query($database, $query, $sqlserver);
-        //echo "Successfully created User with the ID $ID<br/>";
         $Mail=$this->sendMail($Username);
         $data=$this->getUser($ID);
         if(isset($data->UserID) and $Mail==0)
@@ -121,7 +125,9 @@ private $Group;
         $query = "SELECT `Password` FROM `User` WHERE `Username`='$Username'";
         $Column=$PDO->query($query);
         $PW= $Column->fetchColumn(0);
-        if($PW == $Password){
+        //password_verify($Password,$PW)
+        //$Password == $PW
+        if(password_verify($Password,$PW)){
             return 'Success';
         }
         else{
@@ -195,10 +201,21 @@ private $Group;
 
     public function setValue($UserID,$Table,$Value)
     {
+
         $PDO=$this->PDO;
+        if($Table == \enum\tables\user::Password){
+            $options = [
+                'cost' => 11,
+                'salt' => mcrypt_create_iv(22, MCRYPT_DEV_URANDOM),
+            ];
+            $Value = password_hash($Value,PASSWORD_BCRYPT,$options);
+            //$query = "UPDATE `user` SET `$Table`='$Password' WHERE `UserID`= '$UserID'";
+        }
         $query = "UPDATE `user` SET `$Table`='$Value' WHERE `UserID`= '$UserID'";
         $PDO->query($query);
         $check= $this->getProperty($UserID,$Table);
+        //echo $Value."\n";
+        //echo $check."\n";
         if($check==$Value)
         {
             return true;
@@ -208,7 +225,6 @@ private $Group;
             return false;
         }
     }
-
     public function deleteUser($UserID)
     {
 
@@ -225,7 +241,12 @@ private $Group;
         $Eventreturn=$event->deleteUserFromEvent($UserID);//0 wenn erfolgreich 1 sonst
         $Groupreturn=$group->deleteUserFromGroup($UserID);//0 wenn erfolgreich 1 sonst
         $check=$this->getUser($Username);
-
+        if($Eventreturn==1){
+            return 3;
+        }
+        if($Groupreturn ==1){
+            return 4;
+        }
         if($check=='Error' )
         {
             return 0;
