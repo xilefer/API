@@ -38,12 +38,12 @@ class group
 
     private function isPasswordProtected($GroupID){
         $PDO = $this->PDO;
-        $query = "SELCET Accessibility FROM `group` WHERE GroupID = :GroupID";
+        $query = "SELECT Accessibility FROM `group` WHERE GroupID = :GroupID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data = $stmt->fetchColumn(0);
-            if($data = "PASSWORD") return TRUE;
+            if($data == "PASSWORD") return TRUE;
             else return FALSE;
         }
         else return 'Error';
@@ -119,12 +119,12 @@ class group
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
             if($stmt->execute()){
-                $query = "DELETE FROM groupmember WHERE GroupID = :GroupID";
+                $query = "DELETE FROM `groupmember` WHERE GroupID = :GroupID";
                 $stmt = $PDO->prepare($query);
                 $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
                 if($stmt->execute()) {
                     //Anschließend GroupEvents löschen
-                    $query = "DELETE FROM 'groupevent' WHERE GroupID = :GroupID";
+                    $query = "DELETE FROM `groupevents` WHERE GroupID = :GroupID";
                     $stmt = $PDO->prepare($query);
                     $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
                     if($stmt->execute()){
@@ -275,6 +275,7 @@ class group
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            print_r($data);
             if(count($data) == 1)
             {
             $this->deleteGroup($GroupID,$DeletedUserID);

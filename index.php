@@ -19,6 +19,7 @@ $Locations = new \Location\location();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
+//array_shift($URIs);
 $return = new \methodreturn\createreturn();
 $main = new \enum\tables\main();
 if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
@@ -74,6 +75,7 @@ switch ($method) {
 
     case (\enum\Methods::GET):
         switch ($URIs[2]) {
+
             case ("Users"):
                 $data=$Users->getUser($URIs[3]);
                 if($data == 'Error')
@@ -199,8 +201,13 @@ switch ($method) {
                 }
                 break;
             case ('test'):
-                $data = $Groups->deleteUserFromGroup(15);
-                $return->createReturn($data,enum\statuscodes::OK);
+                echo 'TEST';
+                $data = $Groups->deleteUserFromGroup(1);
+                //$data = $Groups->newGroup("Test1",15,3,"OPEN");
+                //$data = $Events->addGroup(3,502729559);
+                //$data = $Groups->addMember(502729559,15);
+                //echo $data;
+                $return->createReturn($data,enum\statuscodes::OK,enum\returncodes::Error_AuthenticationRequired);
                 //hier Testmethoden einfügen
                 break;
         }

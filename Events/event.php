@@ -195,7 +195,7 @@ class Event
     public function addGroup($EventID,$GroupID)
     {
         $PDO = $this->PDO;
-        $query = "INSERT into groupevents (`GroupID`,`EventID`) VALUES (':GroupID',':EventID')";
+        $query = "INSERT into groupevents (`GroupID`,`EventID`) VALUES (:GroupID,:EventID)";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
