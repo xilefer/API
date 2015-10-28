@@ -12,12 +12,16 @@ class User{
 private $database;
 private $sqlserver;
 private $PDO;
+private $Event;
+private $Group;
 
     public function __construct()
     {
         $this->database = "applicationdb";
         $this->sqlserver = mysql_pconnect("localhost","root");
         $this->PDO = new \PDO('mysql:host=localhost;dbname=applicationdb','root','');
+        $this->Event = new \Events\Event();
+        $this->Group = new \Groups\group();
     }
 
 
@@ -205,26 +209,31 @@ private $PDO;
         }
     }
 
-    public function deleteUser($Username)
+    public function deleteUser($UserID)
     {
+
+        $event = $this->Event;
+        $group = $this->Group;
         $PDO= $this->PDO;
-        $Userquery = "SELECT `UserID` FROM `user` WHERE `Username` = '$Username'";
-        $UserID = $PDO->query($Userquery)->fetchColumn(0);
-        $query = "DELETE FROM `user` WHERE `Username`='$Username'";
-        $event = new \Events\Event();
-        $group = new \Groups\group();
-        $location = new \Location\location();
-        /*
+        $Namequery = "SELECT `Username` FROM `User` WHERE `UserID`='$UserID'";
+        $Username=$PDO->query($Namequery)->fetchColumn(0);
+        if(!$Username){
+            return 2;
+        }
+        $query = "DELETE FROM `user` WHERE `UserID`='$UserID'";
         $PDO->query($query);
+        $Eventreturn=$event->deleteUserFromEvent($UserID);//0 wenn erfolgreich 1 sonst
+        $Groupreturn=$group->deleteUserFromGroup($UserID);//0 wenn erfolgreich 1 sonst
         $check=$this->getUser($Username);
-        if($check=='Error')
+
+        if($check=='Error' )
         {
-            return 'Success';
+            return 0;
         }
         else
         {
-            return 'Error';
-        }*/
+            return 1;
+        }
 
     }
 
