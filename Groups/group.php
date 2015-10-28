@@ -122,7 +122,16 @@ class group
                 $query = "DELETE FROM groupmember WHERE GroupID = :GroupID";
                 $stmt = $PDO->prepare($query);
                 $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
-                if($stmt->execute()) return 'Successful';
+                if($stmt->execute()) {
+                    //Anschließend GroupEvents löschen
+                    $query = "DELETE FROM 'groupevent' WHERE GroupID = :GroupID";
+                    $stmt = $PDO->prepare($query);
+                    $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+                    if($stmt->execute()){
+                        return 'Successful'  ;
+                    }
+                    else return 'Error';
+                }
                 else return 'Error';
             }
             else return 'Error';
@@ -283,7 +292,7 @@ class group
             }
             return 0;
         }
-        else return '1';
+        else return 1;
     }
 
     public function deleteUserFromGroup($UserID)
@@ -299,8 +308,9 @@ class group
             {
                 $this->replaceAdminWithParticipant($temp,$UserID);
             }
-            return 1;
+            //return 1;
         }
+        else return 1;
         //Als Teilnehmer aus der Gruppe löschen
         $query = "DELETE FROM `groupmember` WHERE UserID = :UserID";
         $stmt = $PDO->prepare($query);

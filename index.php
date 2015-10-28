@@ -199,11 +199,8 @@ switch ($method) {
                 }
                 break;
             case ('test'):
-                $crypt = password_hash('hanspeter',PASSWORD_BCRYPT);
-                echo $crypt."\n";
-                if(password_verify('hanspeter',$crypt)){
-                    echo 'True';
-                }
+                $data = $Groups->deleteUserFromGroup(15);
+                $return->createReturn($data,enum\statuscodes::OK);
                 //hier Testmethoden einfügen
                 break;
         }

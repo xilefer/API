@@ -232,7 +232,6 @@ class Event
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
-            print_r($data);
             if(count($data) == 1){
                 $this->deleteEvent($EventID,$DeletedUserID);
                 return 0;
