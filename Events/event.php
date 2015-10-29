@@ -67,7 +67,8 @@ class Event
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         $stmt->bindParam(":EventName",$Name,$PDO::PARAM_STR);
         $stmt->bindParam(":LocationID",$LocationID,$PDO::PARAM_INT);
-        $stmt->bindParam(":Starttime",$Starttime,$PDO::PARAM_STR);
+        $Starttime2 = strtotime($Starttime);
+        $stmt->bindParam(":Starttime",$Starttime2,$PDO::PARAM_STR);
         $stmt->bindParam(":Endtime",$Endtime,$PDO::PARAM_STR);
         $stmt->bindParam(":MeetingPoint",$MeetingPoint,$PDO::PARAM_STR);
         $stmt->bindParam(":Description",$Description,$PDO::PARAM_STR);
@@ -329,10 +330,10 @@ class Event
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data=$stmt->fetchAll($PDO::FETCH_ASSOC);
-            $data[0]['ReturnCode']='0';
+            if($stmt->rowCount() == 0) return 21;
             return $data[0];
         }
-        else return 'Error';
+        else return 2;
     }//Index
 }
 

@@ -19,7 +19,7 @@ $Locations = new \Location\location();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
-//array_shift($URIs);
+array_shift($URIs);
 $return = new \methodreturn\createreturn();
 $main = new \enum\tables\main();
 if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
@@ -93,20 +93,14 @@ switch ($method) {
                     break;
                 }
                 $data=$Groups->getGroupsForUser($URIs[3]);
-                if($data == 'Error')
-                {
-                    $return = json_encode(array('ReturnCode' => '32'));
-                    $response->setBody($return);
-                    $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
-                    $response->returnResponse();
+                if($data == 32){
+                    $return->createReturn(null,enum\statuscodes::NOT_FOUND,enum\returncodes::Error_UserHasNoGroups);
+                }
+                else if($data = 12){
+                    $return->createReturn(null,enum\statuscodes::BAD_REQUEST,enum\returncodes::Error_UserDoesnotexist);
                 }
                 else {
-                    $json = json_encode($data);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application\json');
-                    $response->setBody("$json");
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->returnResponse();
+                    $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                 }
                 break;
 
@@ -119,19 +113,13 @@ switch ($method) {
                             break;
                         }
                         $data = $Events->getEventProperties($URIs[4]);
-                        if($data == 'Error') {
-                            $json = json_encode(array('Return Code' => '21'));
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
-                            $response->returnResponse();
+                        if($data == 2) {
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_GroupError);
+                        }else if($data == 21){
+                            $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_NoEventWithSuchID);
                         }
                         else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
                     case('Groups'):
@@ -333,11 +321,18 @@ switch ($method) {
 
             case ('Events'):
                 switch($URIs[3]){
-                    case('Event'):
+                    case('Event')://array_shift($URIs);
+                        print_r($URIs);
+
+                                  foreach($URIs as $STR){
+                                      $temp = str_replace('%20',' ',$STR);
+                                      echo $temp;
+                                  }
                         if(count($URIs) != 14){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
+                                  break;
                         $date=$Events->newEvent($URIs[4],$URIs[5],$URIs[6],$URIs[7],$URIs[8],$URIs[9],$URIs[10],$URIs[11],$URIs[12],$URIs[13]);
                         if($data == 'Error'){
                             $json = json_encode(array('Return Code' => '24'));

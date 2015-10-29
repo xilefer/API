@@ -250,11 +250,11 @@ class group
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()){
-        $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
-            $return['ReturnCode'] = 0;
-            return $return;
+            $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            if(count($return) == 0) return 32;
+            return 0;
         }
-        else return 'Error';
+        else return 12;
     }//Index
     //Gibtt alle GroupID`s zurück die dem User gehören
     public function getGroupsWhereUserIsOwner($UserID)
