@@ -21,7 +21,7 @@ class returncodes extends Enum{
 
     //UserErrorCodes;
     const Error_Emailnotsent = 10;
-    const Error_Usernamealreadyexits = 11;
+    const Error_Emailalreadyexits = 11;
     const Error_UserDoesnotexist = 12;
     const Error_WrongUsernameorPassword = 13;
     const Error_AuthenticationRequired = 14;

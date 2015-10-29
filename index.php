@@ -19,7 +19,6 @@ $Locations = new \Location\location();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
-array_shift($URIs);
 $return = new \methodreturn\createreturn();
 $main = new \enum\tables\main();
 if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
@@ -72,7 +71,6 @@ if($Auth == 'Error')
     exit;
 }
 switch ($method) {
-
     case (\enum\Methods::GET):
         switch ($URIs[2]) {
 
@@ -189,13 +187,8 @@ switch ($method) {
                 }
                 break;
             case ('test'):
-                echo 'TEST';
-                $data = $Groups->deleteUserFromGroup(1);
-                //$data = $Groups->newGroup("Test1",15,3,"OPEN");
-                //$data = $Events->addGroup(3,502729559);
-                //$data = $Groups->addMember(502729559,15);
-                //echo $data;
-                $return->createReturn($data,enum\statuscodes::OK,enum\returncodes::Error_AuthenticationRequired);
+                //echo 'TEST';
+                echo $Users->checkUser('Christopher_Schroth@hotmail.de');
                 //hier Testmethoden einfügen
                 break;
         }
@@ -204,20 +197,20 @@ switch ($method) {
     case (\enum\Methods::PUT):
         switch ($URIs[2]) {
             case ("Users"):
-                if(count($URIs) != 8) {
+                if(count($URIs) != 6) {
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                 }
                 else {
-                    $data = $Users->newUser($URIs[3], $URIs[4], $URIs[5], $URIs[6], $URIs[7]);
+                    $data = $Users->newUser($URIs[3], $URIs[4], $URIs[5]);
                     if ($data == 1) {
-                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_Usernamealreadyexits);
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_Emailalreadyexits);
                     }
                     elseif($data == 2)
                     {
                         $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::Error_Emailnotsent);
                     }
                     else {
-                        $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                        $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                     }
                 }
                 break;

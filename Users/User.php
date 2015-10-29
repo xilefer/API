@@ -25,22 +25,19 @@ private $Group;
     }
 
 
-    public function getUser($Username)
+    public function getUser($UserID)
     {
         $database = $this->database;
         $sqlserver = $this->sqlserver;
-        $query = "SELECT * FROM user WHERE Username = '$Username'";
+        $query = "SELECT * FROM user WHERE `UserID` = '$UserID'";
         $this->PDO->query($query);
         $result= mysql_db_query($database, $query, $sqlserver);
         while ($row = mysql_fetch_object($result)) {
-            $ID = $row->UserID;
-            $Surname = $row->Firstname;
             $User = $row->Username;
-            $Lastname = $row->Lastname;
         }
-        if(isset($ID))
+        if(isset($User))
         {
-            $data = array('UserID' => "$ID", 'Benutzername' => "$User", 'Vorname' => "$Surname", 'Nachname' => "$Lastname",'ReturnCode' => '0');
+            $data = array('Username' => "$User");
             return $data;
         }
         else
@@ -48,13 +45,14 @@ private $Group;
             //$data = array('ReturnCode' => '12');
             return 'Error';
         }
+
     }
 
-    public function newUser($Username,$Surname,$Lastname,$Password,$Email)
+    public function newUser($Email,$Password,$Username)
     {
         $database = $this->database;
         $sqlserver = $this->sqlserver;
-        if($this->checkUser($Username))
+        if($this->checkUser($Email))
         {
             return 1;
         }
@@ -68,26 +66,27 @@ private $Group;
             'salt' => mcrypt_create_iv(22, MCRYPT_DEV_URANDOM),
         ];
         $Crypt = password_hash($Password,PASSWORD_BCRYPT,$options);
-        $query = "INSERT INTO `User`(`UserID`, `Username`, `Firstname`, `Lastname`, `Password`, `LoginToken`, `LoginTime`, `Email`,  `Activated`, `ActivateToken` ) VALUES ('$ID','$Username','$Surname','$Lastname','$Crypt','NULL','NULL','$Email','FALSE','$ActivateToken')";
+        $query = "INSERT INTO `User`(`UserID`, `Username`, `Password`, `Email`, `Activated`, `ActivateToken` ) VALUES ('$ID','$Username','$Crypt','$Email','FALSE','$ActivateToken')";
         mysql_db_query($database, $query, $sqlserver);
         $Mail=$this->sendMail($Username);
         $data=$this->getUser($ID);
-        if(isset($data->UserID) and $Mail==0)
+        if(isset($data['Username']) and $Mail==1)
         {
             return 2;
         }
-        elseif(isset($data->UserID) and $Mail==1)
+        elseif(isset($data['Username']) and $Mail==0)
         {
-            return 0;
+            $return = array('UserID'=>"$ID");
+            return $return;
         }
     }
 
 
-    private function checkUser($Username)
+    public function checkUser($Email)
     {
         $database = $this->database;
         $sqlserver = $this->sqlserver;
-        $query = "SELECT UserID FROM user WHERE Username = '$Username'";
+        $query = "SELECT UserID FROM user WHERE Email = '$Email'";
         $result= mysql_db_query($database, $query, $sqlserver);
         $rowcount=mysql_num_rows($result);
 
