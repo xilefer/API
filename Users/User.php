@@ -118,10 +118,10 @@ private $Group;
         }
     }
 
-    public function verifyUser($Username,$Password)
+    public function verifyUser($Email,$Password)
     {
         $PDO = $this->PDO;
-        $query = "SELECT `Password` FROM `User` WHERE `Username`='$Username'";
+        $query = "SELECT `Password` FROM `User` WHERE `Email`='$Email'";
         $Column=$PDO->query($query);
         $PW= $Column->fetchColumn(0);
         //password_verify($Password,$PW)
