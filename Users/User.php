@@ -45,7 +45,6 @@ private $Group;
             //$data = array('ReturnCode' => '12');
             return 'Error';
         }
-
     }
 
     public function newUser($Email,$Password,$Username)
@@ -257,9 +256,9 @@ private $Group;
 
     }
 
-    public function getUserID($Username){
+    public function getUserID($Email){
         $PDO = $this->PDO;
-        $query = "SELECT `UserID` FROM `user` WHERE `Username`= '$Username'";
+        $query = "SELECT `UserID` FROM `user` WHERE `Email`= '$Email'";
         $UserID=$PDO->query($query)->fetchColumn(0);
         return $UserID;
     }

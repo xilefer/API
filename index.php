@@ -51,23 +51,13 @@ elseif($URIs[2]=="Users" and $URIs[3]=="activate")
 }
 else
 {
-    $data = array('ReturnCode' => '14');
-    $json=json_encode($data);
-    $response->setBody($json);
-    $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
-    $response->registerHeader(\enum\headerfields::CONTENT_TYPE,'application/json');
-    $response->returnResponse();
+    $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_AuthenticationRequired);
     exit;
 }
 
 if($Auth == 'Error')
 {
-    $data = array('ReturnCode' => '13');
-    $json=json_encode($data);
-    $response->setBody($json);
-    $response->setStatuscode(\enum\statuscodes::UNAUTHORIZED);
-    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application\json');
-    $response->returnResponse();
+    $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
     exit;
 }
 switch ($method) {
