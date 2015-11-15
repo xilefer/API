@@ -18,6 +18,7 @@ class returncodes extends Enum{
     const General_LocationError = 4;
     const General_WrongNumberOfParameter = 5;
     const General_CantSetValue = 6;
+    const General_QueryError = 7;
 
     //UserErrorCodes;
     const Error_Emailnotsent = 10;
@@ -44,6 +45,9 @@ class returncodes extends Enum{
     const Error_CantDeleteParticipant = 28;
     const Error_CantDeleteGroupFromEvent = 29;
     const Error_CannotDeleteUserFromEvent = 200;
+    const Error_ReachedMaxParticipants = 201;
+    const Error_ParticipantAlreadyExisting = 202;
+    const Error_GroupAlreadyAdded = 203;
 
     //GroupErrorCodes:
     const Error_UserNotGroupOwner = 30;
@@ -55,6 +59,8 @@ class returncodes extends Enum{
     const Error_CantDeleteGroup = 36;
     const Error_CantDeleteMember = 37;
     const Error_CannotDeleteUserFromGroup = 38;
+    const Error_CantDeleteGroupEvents = 39;
+    const Error_NoGroupWithSuchName = 301;
 
     //LocationErrorCodes;
     const Error_UserNotLocationOwner = 40;
@@ -62,5 +68,10 @@ class returncodes extends Enum{
     const Error_NoLocationsFound = 42;
     const Error_CantCreateLocation = 43;
     const Error_CantDeleteLocation = 44;
+
+    //CommentsErrorCodes:
+    const Error_CantCreateComment = 50;
+    const Error_NoCommentsForEvent = 51;
+    const Error_CantDeleteCommentsForEvent = 52;
 
 }

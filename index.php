@@ -16,6 +16,7 @@ $Users = new \Users\User();
 $Events = new \Events\event();
 $Groups = new \Groups\Group();
 $Locations = new \Location\location();
+$Comments = new \Events\comment();
 $URI= $request->getRequestURI();
 $method= $request->getMethod();
 $URIs=explode("/",$URI);
@@ -76,19 +77,57 @@ switch ($method) {
                 break;
 
             case ('Groups'):
-                if(count($URIs) != 4){
-                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
-                    break;
-                }
-                $data=$Groups->getGroupsForUser($URIs[3]);
-                if($data == 32){
-                    $return->createReturn(null,enum\statuscodes::NOT_FOUND,enum\returncodes::Error_UserHasNoGroups);
-                }
-                else if($data = 12){
-                    $return->createReturn(null,enum\statuscodes::BAD_REQUEST,enum\returncodes::Error_UserDoesnotexist);
-                }
-                else {
-                    $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                switch($URIs[3]){
+                    case('Group'):
+                        if(count($URIs) != 5){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
+                            break;
+                        }
+                        $data=$Groups->getGroupsForUser($URIs[4]);
+                        if($data == 32){
+                            $return->createReturn(null,enum\statuscodes::NOT_FOUND,enum\returncodes::Error_UserHasNoGroups);
+                        }
+                        else if($data == 12){
+                            $return->createReturn(null,enum\statuscodes::BAD_REQUEST,enum\returncodes::Error_UserDoesnotexist);
+                        }
+                        else {
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }
+                        break;
+                    case('Search'):
+                        if(count($URIs) != 5){
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                            break;
+                        }
+                        $URIs[4];
+                        $data = $Groups->searchForGroup($URIs[4]);
+                        if($data == 301){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST.\enum\returncodes::Error_NoGroupWithSuchName);
+                        }
+                        else
+                        {
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }
+                        break;
+                    case('Participating'):
+                        if(count($URIs) != 4){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                            break;
+                        }
+                        $UserID = $Users->getUserID($Username);
+                        $data = $Groups->getEventsForUserWhereUserIsParticipating($UserID);
+                        $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        break;
+                    case('NotParticipatiing'):
+                        if(count($URIs) != 4){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                            break;
+                        }
+                        $UserID = $Users->getUserID($Username);
+                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID);
+                        $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        break;
+
                 }
                 break;
 
@@ -116,19 +155,16 @@ switch ($method) {
                             break;
                         }
                         $data = $Events->getGroupsForEvent($URIs[4]);
-                            if($data == 'Error') {
-                            $json = json_encode(array('Return Code' => '22'));
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
-                            $response->returnResponse();
+                        if($data == 7)
+                        {
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
+                        }
+                        else if($data == 22)
+                        {
+                            $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_NoGroupsForThisEvent);
                         }
                         else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
                     case('Participants'):
@@ -137,19 +173,31 @@ switch ($method) {
                             break;
                         }
                         $data = $Events->getEventMember($URIs[4]);
-                        if($data == 'Error') {
-                            $json = json_encode(array('Return Code' => '23'));
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
-                            $response->returnResponse();
+                        if($data == 7) {
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
+                        }
+                        else if($data == 23)
+                        {
+                            $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_NoParticipantsForThisEvent);
                         }
                         else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }
+                        break;
+                    case('Comment'):
+                        if(count($URIs) != 5){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                            break;
+                        }
+                        $data = $Comments->getCommentsForEvent($URIs[4]);
+                        if($data == 51)
+                        {
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_NoCommentsForEvent);
+                        }
+                        else
+                        {
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                            print_r($data);
                         }
                         break;
                 }
@@ -161,24 +209,22 @@ switch ($method) {
                     break;
                 }
                 $data = $Locations->getAllLocations();
-                if($data == 'Error'){
-                    $json = json_encode(array('Return Code' => '42'));
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->setBody($json);
-                    $response->setStatuscode(\enum\statuscodes::NOT_FOUND);
-                    $response->returnResponse();
+                if($data == 7)
+                {
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
                 }
-                else{
-                    $json = json_encode($data);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->setBody($json);
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->returnResponse();
+                else if($data == 42)
+                {
+                    $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_NoLocationsFound);
+                }
+                else
+                {
+                    $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                 }
                 break;
             case ('test'):
-                //echo 'TEST';
-                echo $Users->checkUser('Christopher_Schroth@hotmail.de');
+                //print_r($Groups->getEventsForUserWhereUserIsNotParticipating(1));
+                print_r($Groups->searchForGroup("Test"));
                 //hier Testmethoden einfügen
                 break;
         }
@@ -187,7 +233,7 @@ switch ($method) {
     case (\enum\Methods::PUT):
         switch ($URIs[2]) {
             case ("Users"):
-                if(count($URIs) != 6) {
+                if(count($URIs) != 8) {
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                 }
                 else {
@@ -205,30 +251,29 @@ switch ($method) {
                 }
                 break;
 
-
             case ('Groups'):
                 $data = "";
-                switch($URIs[3]){
+                switch($URIs[3])
+                {
                     case('Group'):
                         if(count($URIs) != 8){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
                         $data=$Groups->newGroup($URIs[4],$URIs[5],$URIs[6],$URIs[7]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' =>'33'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
-                        }else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_LANGUAGE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
-                        break;
+                        else if($data == 3){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_GroupError);
+                        }
+                        else if($data == 34){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CouldntAddMember);
+                        }
+                        else if($data == 33){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantCreateEvent);
+                        }
+                    break;
                     case('ProtectedGroup'):
                         if(count($URIs) != 7){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -236,20 +281,19 @@ switch ($method) {
                         }
                         $UserID = $Users->getUserID($Username);
                         $data=$Groups->newGroupProtected($URIs[4],$UserID,$URIs[5],$URIs[6]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' =>'33'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
-                        }else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_LANGUAGE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
-
+                        elseif($data == 3){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_GroupError);
+                        }
+                        elseif($data == 31){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongGroupPassword);
+                        }
+                        elseif($data == 34){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CouldntAddMember);
+                        }
+                    break;
                     case('Member'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -257,28 +301,17 @@ switch ($method) {
                         }
                         $UserID = $Users->getUserID($Username);
                         $data=$Groups->addMember($URIs[4],$UserID);
-                        if($data == 'Error') {
-                            $json = json_encode(array('Return Code' => '34'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE, 'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
+                        echo $data;
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
-                        else if($data = 'Group is Protected, please use /Groups/Protected'){
-                             $json = json_encode(array('Return Code' => '35'));
-                             $response->setBody($json);
-                             $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                             $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                             $response->returnResponse();
+                        else if($data == 34){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CouldntAddMember);
+                        }else if($data == 666){
+                            $data = array("Message" => "Group is Protected, please use /Groups/Protected");
+                            $return->createReturn($data,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CouldntAddMember);
                         }
-                        else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_LANGUAGE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
-                        }
-                        break;
+                    break;
                     case('Protected'):
                         if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -286,53 +319,44 @@ switch ($method) {
                         }
                         $UserID = $Users->getUserID($Username);
                         $data=$Groups->addMemberProtected($URIs[4],$URIs[5],$UserID);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' =>'34'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
-                        }else{
-                            $json = json_encode($data);
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_LANGUAGE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->returnResponse();
+                        if($data == 0){
+                           $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                        }else if($data == 31){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongGroupPassword);
+                        }else if($data == 34){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CouldntAddMember);
                         }
+                    break;
                 }
                 break;
 
             case ('Events'):
                 switch($URIs[3]){
-                    case('Event')://array_shift($URIs);
-                        print_r($URIs);
-
-                                  foreach($URIs as $STR){
-                                      $temp = str_replace('%20',' ',$STR);
-                                      echo $temp;
-                                  }
-                        if(count($URIs) != 14){
+                    case('Event'):
+                        if(count($URIs) != 13){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                                  break;
-                        $date=$Events->newEvent($URIs[4],$URIs[5],$URIs[6],$URIs[7],$URIs[8],$URIs[9],$URIs[10],$URIs[11],$URIs[12],$URIs[13]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '24'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
-                        }else if($data = 'ErrorParticipant'){
-                            $json = json_encode(array('Return Code' => '25'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
+                        $Endtime = str_replace('%20', ' ',$URIs[7]);
+                        $Starttime =str_replace('%20',' ',$URIs[6]);
+                        echo $Endtime;
+                        echo $Starttime;
+                        $UserID = $Users->getUserID($Username);
+                        $data = $Events->newEvent($URIs[4],$URIs[5],$Starttime,$Endtime,$URIs[8],$URIs[9],$UserID,$URIs[10],$URIs[11],$URIs[12]);
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
-                        else{
-                            $response->setStatuscode(\enum\statuscodes::CREATED);
-                            $response->returnResponse();
+                        else if($data == 7){
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
+                        }
+                        else if($data == 25){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantAddParticipant);
+                        }
+                        else if($data == 201){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ReachedMaxParticipants);
+                        }
+                        else if($data == 202){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ParticipantAlreadyExisting);
                         }
                         break;
                     case('Participant'):
@@ -340,17 +364,21 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $date =$Events->addParticipant($URIs[4],$URIs[5],$URIs[6]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '25'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
+                        $data =$Events->addParticipant($URIs[4],$URIs[5],$URIs[6]);
+                        if($data == 0) {
+                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
-                        else{
-                            $response->setStatuscode(\enum\statuscodes::CREATED);
-                            $response->returnResponse();
+                        else if($data == 7){
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
+                        }
+                        else if($data == 25){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantAddParticipant);
+                        }
+                        else if($data == 201){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ReachedMaxParticipants);
+                        }
+                        else if($data == 202){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ParticipantAlreadyExisting);
                         }
                         break;
                     case('Group'):
@@ -358,46 +386,51 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $date = $Events->addGroup($URIs[4],$URIs[5]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '26'));
-                            $response->setBody($json);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->returnResponse();
+                        $data = $Events->addGroup($URIs[4],$URIs[5]);
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                        }
+                        else if($data == 26){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantAddGroupToThisEvent);
+                        }
+                        else if($data == 203){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_GroupAlreadyAdded);
+                        }
+                        break;
+                    case('Comment'):
+                        if(count($URIs) != 6){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                        }
+                        $UserID = $Users->getUserID($Username);
+                        $data = $Comments->newComment($URIs[4],$URIs[5],$UserID);
+                        if($data == 50){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantCreateComment);
                         }
                         else{
-                            $response->setStatuscode(\enum\statuscodes::CREATED);
-                            $response->returnResponse();
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
                 }
-
                 break;
+
             case ('Locations'):
                 if(count($URIs) != 5){
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                     break;
                 }
-                $data = $Locations->newLocation($URIs[3],$URIs[4]);
-                if($data == 'Error'){
-                    $json = json_encode(array('Return Code' => '43'));
-                    $response->setBody($json);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->returnResponse();
+                $UserID = $Users->getUserID($Username);
+                $data = $Locations->newLocation($URIs[3],$URIs[4],$UserID);
+                if($data == 0){
+                    $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                 }
-                else{
-                    $response->setStatuscode(\enum\statuscodes::OK);
-
-                    $response->returnResponse();
+                else if($data == 43){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantCreateLocation);
                 }
                 break;
         }
         break;
 
     case (\enum\Methods::POST):
-
         switch ($URIs[2]) {
             case ("Users"):
                 $UserID=$Users->getUserID($Username);
@@ -420,23 +453,19 @@ switch ($method) {
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                     break;
                 }
-                $data = "";
-                $UserID = $Users->getUserID($Username);
-
-                $data=$Groups->setValue($URIs[3],$URIs[4],$URIs[5],$UserID);
-                if($data == 'Error')
-                {
-                    $json = json_encode(array('Return Code' => '6'));
-                    $response->setBody($json);
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->returnResponse();
+                if($main->isValidColumn(\enum\tables\tablenames::Group,$URIs[4])){
+                    $UserID = $Users->getUserID($Username);
+                    $data = $Groups->setValue($URIs[3],$URIs[4],$URIs[5],$UserID);
+                    if($data == 0){
+                        $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                    }else if($data == 6){
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_CantSetValue);
+                    }else if($data == 30){
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotGroupOwner);
+                    }
                 }
-                else
-                {
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->returnResponse();
+                else{
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_InvalidTablename);
                 }
                 break;
 
@@ -445,36 +474,51 @@ switch ($method) {
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                     break;
                 }
-                $UserID = $Users->getUserID($Username);
-                $data = $Events->setValue($URIs[3],$URIs[4],$URIs[5],$UserID);
-                if($data == 'Error'){
-                    $json = json_encode(array('Return Code' => '6'));
-                    $response->setBody($json);
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->returnResponse();
+                if($main->isValidColumn(\enum\tables\tablenames::Event,$URIs[4])){
+                    $UserID = $Users->getUserID($Username);
+                    $data = $Events->setValue($URIs[3],$URIs[4],$URIs[5],$UserID);
+                    if($data == 0){
+                        $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                    }else if($data == 6){
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_CantSetValue);
+                    }else if($data == 20){
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotEventOwner);
+                    }
                 }
                 else{
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->returnResponse();
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_InvalidTablename);
                 }
                 break;
+
             case ('Location'):
-                $UserID = $Users->getUserID($Username);
-                $data = $Locations->changeValue($URIs[3],$URIs[4],$URIs[5],$UserID);
-                if($data = 'Error'){
-                    $json = json_encode(array('Return Code' => '6'));
-                    $response->setBody($json);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->returnResponse();
+                if($main->isValidColumn(\enum\tables\tablenames::Location,$URIs[4])){
+                    $UserID = $Users->getUserID($Username);
+                    $data = $Locations->changeValue($URIs[3],$URIs[4],$URIs[5],$UserID);
+                    if($data == 0){
+                        $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                    }else if($data == 6){
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_CantSetValue);
+                    }else if($data == 40){
+                        $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotLocationOwner);
+                    }
                 }
                 else{
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->returnResponse();
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_InvalidTablename);
                 }
                 break;
+
+            case ('Participant'):
+                if(count($URIs) != 5){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                }
+                $UserID = $Users->getUserID($Username);
+                $data = $Events->setPariticipantStatus($URIs[3],$URIs[4],$UserID);
+                if($data == 0){
+                    $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                }else if($data == 6){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_CantSetValue);
+                }
+
         }
         break;
 
@@ -510,24 +554,17 @@ switch ($method) {
                             break;
                         }
                         $UserID = $Users->getUserID($Username);
-                        $data = $Groups->deleteGroup($URIs[4],$UserID);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '36'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }else if($data = 'User is no Admin'){
-                            $json = json_encode(array('Return Code' => '30'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }
-                        else{
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
+                        $data = $Groups->deleteGroup($URIs[4],$UserID); //Returncodes: 0,30,36,37,39
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }else if($data == 30){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotGroupOwner);
+                        }else if($data == 36){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteGroup);
+                        }else if($data == 37){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteMember);
+                        }else if($data == 39){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteGroupEvents);
                         }
                         break;
                     case('Member'):
@@ -535,18 +572,13 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $date = $Groups->deleteMember($URIs[4],$URIs[5]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '37'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }
-                        else{
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
+                        $data = $Groups->deleteMember($URIs[4],$URIs[5]); //Returncodes: 0,37
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }else if($data == 37){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteMember);
+                        }else if($data == 36){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteGroup);
                         }
                         break;
                 }
@@ -557,98 +589,85 @@ switch ($method) {
                 $data = "";
                 switch($URIs[3]){
                     case('Event'):
+                        echo count($URIs);
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
                         $UserID = $Users->getUserID($Username);
-                        $data = $Events->deleteEvent($URIs[4],$UserID);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '27'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }else if($data = 'UserNotEventAdmin'){
-                            $json = json_encode(array('Return Code' => '20'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }
-                        else{
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
+                        $data = $Events->deleteEvent($URIs[4],$UserID); //Returncodes: 0,20,27,28
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }else if($data == 20){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotEventOwner);
+                        }else if($data == 27){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteEvent);
+                        }else if($data == 28){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteParticipant);
                         }
                         break;
+
                     case('Participant'):
                         if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
                         $data = $Events->deleteParticipant($URIs[4],$URIs[5]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '28'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
-                        }
-                        else{
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }else if($data == 28){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteParticipant);
                         }
                         break;
+
                     case('Group'):
                         if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
                         $data = $Events->removeGroup($URIs[4],$URIs[5]);
-                        if($data == 'Error'){
-                            $json = json_encode(array('Return Code' => '29'));
-                            $response->setBody($json);
-                            $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
+                        if($data == 0){
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
+                        }
+                        else if($data == 29){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteGroupFromEvent);
+                        }
+                        break;
+
+                    case('Comment'):
+                        if(count($URIs) != 5){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                            break;
+                        }
+                        $data = $Comments->deleteCommentsForEvent($URIs[4]);
+                        if($data == 52){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteCommentsForEvent);
                         }
                         else{
-                            $response->setStatuscode(\enum\statuscodes::OK);
-                            $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                            $response->returnResponse();
+                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
                 }
                 break;
+
             case ('Location'):
                 if(count($URIs) != 4){
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                     break;
                 }
                 $UserID = $Users->getUserID($Username);
-                $data = $Locations->deleteLocation($URIs[3],$UserID);
-                if($data == 'Error'){
-                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteLocation); // 44
-                }else if($data = 'User is not Locationowner'){
-                    $json = json_encode(array('Return Code' => '40'));
-                    $response->setBody($json);
-                    $response->setStatuscode(\enum\statuscodes::BAD_REQUEST);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->returnResponse();
+                $data = $Locations->deleteLocation($URIs[3],$UserID); //Returncodes: 0,40,44
+                if($data == 0){
+                    $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
                 }
-                else{
-                    $response->setStatuscode(\enum\statuscodes::OK);
-                    $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
-                    $response->returnResponse();
+                else if($data == 40){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotLocationOwner);
+                }
+                else if($data == 44){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteLocation);
                 }
                 break;
         }
         break;
 
 }
-
-
-
-

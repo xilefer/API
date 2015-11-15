@@ -31,11 +31,12 @@ class location
 
     private function createLocationID()
     {
+        $PDO = $this->PDO;
         $query = "SELECT * FROM Locations WHERE LocationID = :LocationID";
-        $stmt = $this->PDO->prepare($query);
+        $stmt = $PDO->prepare($query);
         do{
             $rand = rand(0,99999999999);
-            $stmt->bindParam(":LocationID",$rand,PDO::PARAM_INT);
+            $stmt->bindParam(":LocationID",$rand,$PDO::PARAM_INT);
             $stmt->execute();
         }
         while($stmt->rowCount() != 0);
@@ -55,59 +56,86 @@ class location
         else return 'Error';
     }
 
-    public function newLocation($Name,$Description)
+    /**
+     * Erstellt eine neue Location
+     * Returncodes: 0,43
+     * @param $Name
+     * @param $Description
+     * @return string
+     */
+    public function newLocation($Name,$Description,$OwnerID)
     {
         //Ziehen der LocationID
         $LocationID = $this->createLocationID();
-        $query = "INSERT INTO location(`LocationID`,`Name`,`Description`,`OwnerID`) VALUES (':LocationID',':Name',':Description',':OwnerID')";
+        $query = "INSERT INTO location(`LocationID`,`LocationName`,`Description`,`OwnerID`) VALUES (:LocationID,:NName,:Description,:OwnerID)";
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":LocationID",$LocationID,$PDO::PARAM_INT);
-        $stmt->bindParam(":Name",$Name,$PDO::PARAM_STR);
+        $stmt->bindParam(":NName",$Name,$PDO::PARAM_STR);
+        $Description = str_replace('%20',' ',$Description);
         $stmt->bindParam(":Description",$Description,$PDO::PARAM_STR);
         $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
-        if($stmt->execute()) return 'Successful';
-        else return 'Error';
+        if($stmt->execute()) return 0;
+        else return 43;
     }
+
+    /**
+     * Löscht eine Location
+     * Returncodes: 0,40,44
+     * @param $LocationID
+     * @param $UserID
+     * @return int|string
+     */
     public function deleteLocation($LocationID,$UserID)
     {
         if($this->isLocationOwner($UserID,$LocationID))
         {
-            $query ="DELETE FROM location WHERE LocationID = :LocationID";
+            $query ="DELETE FROM `location` WHERE LocationID = :LocationID";
             $PDO = $this->PDO;
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":LocationID",$LocationID,$PDO::PARAM_INT);
-            if($stmt->execute()) return 'Successful';
-            else return 'Error';
+            if($stmt->execute()) return 0;
+            else return 44;
         }
-        else return 'User is not Locationowner';
+        else return 40;
     }
     public function getAllLocations()
     {
-        $query = "SELECT Name, Description FROM location";
+        $query = "SELECT LocationID, LocationName, Description FROM location";
         $PDO = $this->PDO;
         $stmt =$PDO->prepare($query);
         if($stmt->execute())
         {
-            return $stmt->fetchAll();
+            if($stmt->rowCount() == 0) return 42;
+            return $stmt->fetchAll($PDO::FETCH_ASSOC);
         }
         else{
-            return 'Error';
+            return 7;
         }
     }//Index
+
+    /**
+     * Setzt einen Wert in der Datenbank
+     * Returncodes: 0,6,40
+     * @param $LocationID
+     * @param $Param
+     * @param $Value
+     * @param $UserID
+     * @return int
+     */
     public function changeValue($LocationID,$Param,$Value,$UserID)
     {
         if($this->isLocationOwner($UserID,$LocationID)){
-            $query="UPDATE location SET :Param = :Value WHERE LocationID = :LocationID";
+            $query="UPDATE `location` SET :Param = :Value WHERE LocationID = :LocationID";
             $PDO = $this->PDO;
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":Param",$Param,$PDO::PARAM_STR);
             $stmt->bindParam(":Value",$Value,$PDO::PARAM_STR);
             $stmt->bindParam(":LocationID",$LocationID,$PDO::PARAM_INT);
-            if($stmt->execute()) return 'Successful';
-            else return 'Error';
+            if($stmt->execute()) return 0;
+            else return 6;
         }
-        else return 'User is not Locationowner';
+        else return 40;
     }
     public function getLocationsWhereUserIsOwner($UserID)
     {
