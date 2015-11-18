@@ -37,8 +37,6 @@ class main {
                         return true;
                     case \enum\tables\event::Starttime:
                         return true;
-                    case \enum\tables\event::Status:
-                        return true;
                     case \enum\tables\event::Transport:
                         return true;
                     default: return false;
