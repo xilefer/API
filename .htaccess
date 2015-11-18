@@ -1,7 +1,6 @@
 RewriteEngine On
-RewriteBase /API
+RewriteBase /APIChris
 RewriteRule ^(.*)$ index.php
 RewriteCond %{HTTPS} !=on
 RewriteCond %{ENV:HTTPS} !=on
 RewriteRule .* https://jacky.hackergrotte.de:86%{REQUEST_URI} [R=301,L]
-

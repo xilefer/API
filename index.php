@@ -21,11 +21,29 @@ $method= $request->getMethod();
 $URIs=explode("/",$URI);
 $return = new \methodreturn\createreturn();
 $main = new \enum\tables\main();
-if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
-{
+if($URIs[2]=='Login' and isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW'])){
     $Username=$_SERVER['PHP_AUTH_USER'];
     $PW= $_SERVER['PHP_AUTH_PW'];
     $Auth=$Users->verifyUser($Username,$PW);
+    if($Auth == 'Error'){
+        $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
+    }
+    else
+    {
+        $data=$Users->loginUser($Username);
+        $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+    }
+}
+elseif(isset($_SERVER['PHP_AUTH_USER']))
+{
+    $count = count($URIs);
+    $lastposition = $count-1;
+    $LoginToken=$_SERVER['PHP_AUTH_USER'];
+    $ID=$Users->verifyToken($LoginToken);
+    if(!$ID){
+        $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorLoginToken);
+    }
+    else{$UserID=$ID;}
 }
 elseif($URIs[2]=="Users" and $URIs[3]=="activate")
 {
@@ -54,18 +72,13 @@ else
     $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_AuthenticationRequired);
     exit;
 }
-
-if($Auth == 'Error')
-{
-    $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
-    exit;
-}
 switch ($method) {
+
     case (\enum\Methods::GET):
         switch ($URIs[2]) {
 
             case ("Users"):
-                $data=$Users->getUser($URIs[3]);
+                $data=$Users->getUser($UserID);
                 if($data == 'Error')
                 {
                     $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_UserDoesnotexist);
@@ -178,7 +191,8 @@ switch ($method) {
                 break;
             case ('test'):
                 //echo 'TEST';
-                echo $Users->checkUser('Christopher_Schroth@hotmail.de');
+                print_r($_SERVER);
+
                 //hier Testmethoden einfügen
                 break;
         }
@@ -189,6 +203,9 @@ switch ($method) {
             case ("Users"):
                 if(count($URIs) != 6) {
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                }
+                elseif($UserID != 312623){
+                    $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_BadPermission);
                 }
                 else {
                     $data = $Users->newUser($URIs[3], $URIs[4], $URIs[5]);
@@ -234,7 +251,6 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $UserID = $Users->getUserID($Username);
                         $data=$Groups->newGroupProtected($URIs[4],$UserID,$URIs[5],$URIs[6]);
                         if($data == 'Error'){
                             $json = json_encode(array('Return Code' =>'33'));
@@ -646,7 +662,6 @@ switch ($method) {
                 break;
         }
         break;
-
 }
 
 

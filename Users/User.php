@@ -131,10 +131,6 @@ private $Group;
         else{
             return 'Error';
         }
-
-
-
-
     }
 
     private function sendMail($Username)
@@ -261,5 +257,52 @@ private $Group;
         $query = "SELECT `UserID` FROM `user` WHERE `Email`= '$Email'";
         $UserID=$PDO->query($query)->fetchColumn(0);
         return $UserID;
+    }
+
+    public function checkLoginToken($LoginToken){
+        $PDO=$this->PDO;
+        $query = "SELECT `UserID` FROM `user` WHERE `LoginToken`='$LoginToken'";
+        $result=$PDO->query($query);
+        $Token=$result->fetchColumn(0);
+        if(!$Token){
+            return false;
+        }
+        else return true;
+    }
+
+    public function loginUser($Email){
+        $PDO = $this->PDO;
+        $checkquery = "SELECT `LoginToken` FROM `user` WHERE `Email`='$Email'";
+        $check = $PDO->query($checkquery)->fetchColumn(0);
+        if($check == null){
+            Do{
+                $LoginToken = rand(0,99999999999999999999);
+            }while($this->checkLoginToken($LoginToken));
+
+            $query = "UPDATE `user` SET `LoginToken`='$LoginToken',`LoginTime`=CURRENT_TIMESTAMP WHERE `Email`='$Email'";
+            $PDO->query($query);
+            $selectquery = "SELECT `LoginToken` FROM `user` WHERE `Email`='$Email'";
+            $Token=$PDO->query($selectquery)->fetchColumn(0);
+            $data = array('LoginToken'=>"$Token");
+            return $data;
+        }
+        else
+        {
+            $data = array("LoginToken"=>"$check");
+            return $data;
+        }
+
+    }
+
+    public function verifyToken($Token){
+        $PDO = $this->PDO;
+        $query = "SELECT `UserID` FROM `user` WHERE `LoginToken`= '$Token'";
+        $UserID=$PDO->query($query)->fetchColumn(0);
+        if($UserID){
+            return $UserID;
+        }
+        else{
+            return false;
+        }
     }
 }
