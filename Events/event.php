@@ -104,7 +104,7 @@ class Event
         {
             $ReturnParticipant = $this->addParticipant($OwnerID,$EventID,'YES');
             //Owner als Teilnehmer eintragen
-            if($ReturnParticipant == 0) return 0;
+            if($ReturnParticipant == 0) return $EventID;
             else if($ReturnParticipant == 7) return 7;
             else if($ReturnParticipant == 25) return 25;
             else if($ReturnParticipant == 201) return 201;
@@ -210,7 +210,6 @@ class Event
      */
     public function addParticipant($UserID, $EventID, $Status)
     {
-        echo "start";
         $PDO = $this->PDO;
         $query = "SELECT MaxParticipants FROM event WHERE EventID = :EventID";
         $stmt1 = $PDO->prepare($query);
@@ -319,11 +318,9 @@ class Event
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()) {
-            if($stmt->rowCount() == 0) {
-                return 22;
-            }
             $GroupIDS = $stmt->fetchAll($PDO::FETCH_COLUMN);
-            return $GroupIDS;
+            if(count($GroupIDS) == 0) return 22;
+            else return $GroupIDS;
         }
         else return 7;
     }//Index

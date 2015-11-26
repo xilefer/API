@@ -22,13 +22,14 @@ $method= $request->getMethod();
 $URIs=explode("/",$URI);
 $return = new \methodreturn\createreturn();
 $main = new \enum\tables\main();
-if($URIs[2]=='Login' and isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW'])){
+if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
+{
     $Username=$_SERVER['PHP_AUTH_USER'];
     $PW= $_SERVER['PHP_AUTH_PW'];
     $Auth=$Users->verifyUser($Username,$PW);
     if($Auth == 'Error'){
         $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
-    }
+}
     else
     {
         $data=$Users->loginUser($Username);
@@ -73,6 +74,7 @@ else
     $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_AuthenticationRequired);
     exit;
 }
+$UserID = $Users->getUserID($Username);
 switch ($method) {
 
     case (\enum\Methods::GET):
@@ -107,6 +109,7 @@ switch ($method) {
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
+
                     case('Search'):
                         if(count($URIs) != 5){
                             $return->createReturn(null, \enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
@@ -122,20 +125,25 @@ switch ($method) {
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
+
                     case('Participating'):
-                        if(count($URIs) != 4){
+                        if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                             break;
                         }
-                        $data = $Groups->getEventsForUserWhereUserIsParticipating($UserID);
+                        $UserID = $Users->getUserID($Username);
+                        $data = $Groups->getEventsForUserWhereUserIsParticipating($UserID,$URIs[4]);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
-                    case('NotParticipatiing'):
+
+                    case('NotParticipating'):
                         if(count($URIs) != 4){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                             break;
                         }
                         $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID);
+                        $UserID = $Users->getUserID($Username);
+                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID,$URIs[4]);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
 
@@ -160,6 +168,7 @@ switch ($method) {
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
+
                     case('Groups'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -178,6 +187,7 @@ switch ($method) {
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
+
                     case('Participants'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -195,6 +205,7 @@ switch ($method) {
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
+
                     case('Comment'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
@@ -214,6 +225,7 @@ switch ($method) {
                 }
 
                 break;
+
             case ('Locations'):
                 if(count($URIs) != 3){
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -233,9 +245,13 @@ switch ($method) {
                     $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                 }
                 break;
+
             case ('test'):
+                //print_r($Groups->getEventsForUserWhereUserIsNotParticipating(1));
+                $Wichser = $Groups->getEventsForUserWhereUserIsParticipating(1,time());
+                print_r($Wichser);
                 //echo 'TEST';
-                echo $Users->checkUser('Christopher_Schroth@hotmail.de');
+                //echo $Users->checkUser('Christopher_Schroth@hotmail.de');
                 //hier Testmethoden einfügen
                 break;
         }
@@ -270,15 +286,13 @@ switch ($method) {
                 switch($URIs[3])
                 {
                     case('Group'):
-                        if(count($URIs) != 8){
+                        if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data=$Groups->newGroup($URIs[4],$URIs[5],$URIs[6],$URIs[7]);
-                        if($data == 0){
-                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
-                        }
-                        else if($data == 3){
+                        $UserID = $Users->getUserID($Username);
+                        $data=$Groups->newGroup($URIs[4],$UserID,$URIs[5]);
+                        if($data == 3){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_GroupError);
                         }
                         else if($data == 34){
@@ -287,17 +301,21 @@ switch ($method) {
                         else if($data == 33){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantCreateEvent);
                         }
+                        else{
+                            //Erfolgreich
+                            $data = array("GroupID" => $data);
+                            $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                        }
                     break;
+
                     case('ProtectedGroup'):
                         if(count($URIs) != 7){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
                         $data=$Groups->newGroupProtected($URIs[4],$UserID,$URIs[5],$URIs[6]);
-                        if($data == 0){
-                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
-                        }
-                        elseif($data == 3){
+
+                        if($data == 3){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_GroupError);
                         }
                         elseif($data == 31){
@@ -306,14 +324,18 @@ switch ($method) {
                         elseif($data == 34){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CouldntAddMember);
                         }
+                        else{
+                            $data = array("GroupID" => $data);
+                            $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                        }
                     break;
+
                     case('Member'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
                         $data=$Groups->addMember($URIs[4],$UserID);
-                        echo $data;
                         if($data == 0){
                             $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
@@ -343,18 +365,18 @@ switch ($method) {
 
             case ('Events'):
                 switch($URIs[3]){
+
                     case('Event'):
-                        if(count($URIs) != 13){
+                        if(count($URIs) != 12){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $Endtime = str_replace('%20', ' ',$URIs[7]);
-                        $Starttime =str_replace('%20',' ',$URIs[6]);
-                        $data = $Events->newEvent($URIs[4],$URIs[5],$Starttime,$Endtime,$URIs[8],$URIs[9],$UserID,$URIs[10],$URIs[11],$URIs[12]);
-                        if($data == 0){
-                            $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
-                        }
-                        else if($data == 7){
+                        $Endtime = str_replace('%20', ' ',$URIs[6]);
+                        $Starttime =str_replace('%20',' ',$URIs[5]);
+                        $UserID = $Users->getUserID($Username);
+                        //Location ID soll noch entfernt werden
+                        $data = $Events->newEvent($URIs[4],0,$Starttime,$Endtime,$URIs[7],$URIs[8],$UserID,$URIs[9],$URIs[10],$URIs[11]);
+                        if($data == 7){
                             $return->createReturn(null, \enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
                         }
                         else if($data == 25){
@@ -366,13 +388,18 @@ switch ($method) {
                         else if($data == 202){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ParticipantAlreadyExisting);
                         }
+                        else{
+                            $data = array("EventID" => $data);
+                            $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                        }
                         break;
+
                     case('Participant'):
-                        if(count($URIs) != 7){
+                        if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data =$Events->addParticipant($URIs[4],$URIs[5],$URIs[6]);
+                        $data =$Events->addParticipant($UserID,$URIs[4],$URIs[5]);
                         if($data == 0) {
                             $return->createReturn(null,\enum\statuscodes::CREATED,\enum\returncodes::Success);
                         }
@@ -389,6 +416,7 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ParticipantAlreadyExisting);
                         }
                         break;
+
                     case('Group'):
                         if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -405,6 +433,7 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_GroupAlreadyAdded);
                         }
                         break;
+
                     case('Comment'):
                         if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
@@ -567,6 +596,7 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteGroupEvents);
                         }
                         break;
+
                     case('Member'):
                         if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
@@ -589,7 +619,6 @@ switch ($method) {
                 $data = "";
                 switch($URIs[3]) {
                     case('Event'):
-                        echo count($URIs);
                         if (count($URIs) != 5) {
                             $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::General_WrongNumberOfParameter);
                             break;
@@ -631,6 +660,7 @@ switch ($method) {
                             $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::Error_CantDeleteGroupFromEvent);
                         }
                         break;
+
                     case('Comment'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);

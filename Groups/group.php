@@ -85,7 +85,6 @@ class group
      */
     public function newGroupProtected($Name,$OwnerID,$MaxMembers,$Password)
     {
-        echo "Protected Group";
         $GroupID = $this->createGroupID();
         $CreationTime = date('Y-n-d G:i:s');
         $PDO = $this->PDO;
@@ -102,7 +101,7 @@ class group
         {
             //Owner als Mitglied setzen
             $AddMemberReturn = $this->addMemberProtected($GroupID,$Password,$OwnerID);
-            if($AddMemberReturn == 0) return 0;
+            if($AddMemberReturn == 0) return $GroupID;
             else if ($AddMemberReturn == 31) return 31;
             else if($AddMemberReturn == 34) return 34;
         }
@@ -119,7 +118,7 @@ class group
      * @param $Accessibility
      * @return int|string
      */
-    public function newGroup($Name,$OwnerID,$MaxMembers,$Accessibility)
+    public function newGroup($Name,$OwnerID,$MaxMembers)
     {
         $GroupID = $this->createGroupID();
         $CreationTime = date('Y-n-d G:i:s');
@@ -132,15 +131,15 @@ class group
         $stmt->bindParam(":MaxMembers",$MaxMembers,$PDO::PARAM_INT);
         $stmt->bindParam(":CreationTime",$CreationTime,$PDO::PARAM_STR);
         $stmt->bindParam(":ModificationTime",$CreationTime,$PDO::PARAM_STR);
+        $Accessibility = "OPEN";
         $stmt->bindParam(":Accessibility",$Accessibility,$PDO::PARAM_STR);
 
         if($stmt->execute())
         {
             //Owner als Mitglied setzen
             $AddMemberReturn = $this->addMember($GroupID,$OwnerID);
-            if($AddMemberReturn == 0) return 0;
+            if($AddMemberReturn == 0) return $GroupID;
             else if($AddMemberReturn == 34) return 34;
-            else if($AddMemberReturn = 'Successful') return 'Successful';
             else if($AddMemberReturn == 'Group is Protected, please use /Groups/Protected')
             {
                 return 3;
@@ -200,10 +199,10 @@ class group
     public function setValue($GroupID,$Table,$Value,$UserID)//Index
     {
         if($this->isGroupAdmin($UserID,$GroupID)){
-            $query = "UPDATE group SET :Param = :Value WHERE GroupID=:GroupID";
+            $query = "UPDATE `group` SET $Table = :Value WHERE GroupID=:GroupID";
             $PDO = $this->PDO;
             $stmt = $PDO->prepare($query);
-            $stmt->bindParam(":Param",$Table,$PDO::PARAM_STR);
+            //$stmt->bindParam(":Param",$Table,$PDO::PARAM_STR);
             $stmt->bindParam(":Value",$Value,$PDO::PARAM_STR);
             $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
             if($stmt->execute()) return 0;
@@ -452,7 +451,7 @@ class group
      * @param $UserID
      * @return array
      */
-    public function getEventsForUserWhereUserIsNotParticipating($UserID)
+    public function getEventsForUserWhereUserIsNotParticipating($UserID,$LastDate)
     {
         $return = array();
         $Groups = $this->getGroupsForUser($UserID);
@@ -484,8 +483,9 @@ class group
     /**
      * Für User alle Events mit Teilnahme und Status erhalten (Name, Status(yes no maybe), Teilnehmerzahl, Status(Protected, Open) der Gruppe, Zugewiesene Gruppen)
      * @param $UserID
+     * @param $LastDate
      */
-    public function getEventsForUserWhereUserIsParticipating($UserID)
+    public function getEventsForUserWhereUserIsParticipating($UserID,$LastDate)
     {
         $PDO = $this->PDO;
         $query = "SELECT EventID FROM `eventmembers` WHERE UserID = :UserID";
@@ -493,25 +493,41 @@ class group
         $stmt->bindParam(":UserID", $UserID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $EventIDS = $stmt->fetchAll(($PDO::FETCH_COLUMN));
-            $return = array();
+            $temp = array();
             foreach($EventIDS as $EventID)
             {
-                $Events = new \Events\Event();
-                $EventName = $Events->getEventName($EventID);
-                $ParticipantStatus = $Events->getParticipantStatus($EventID,$UserID);
-                $Pariticipants = $Events->getNumberOfParticipants($EventID);
-                $GroupsForEvent = $Events->getGroupsForEvent($EventID);
-                $GroupStatus = array();
-                $Groups = new \Groups\group();
-                foreach($GroupsForEvent as $GroupID)
+                $DateQuery = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
+                $stmtDate = $PDO->prepare($DateQuery);
+                $stmtDate->bindParam(":EventID",$EventID);
+                if($stmtDate->execute())
                 {
-                    $GroupKind = $Groups->getGroupKind($GroupID);
-                    $GroupKind = array("0"=>$GroupKind);
-                    $GroupStatus = array_merge($GroupStatus,$GroupKind);
+                    $SelectedDate = $stmtDate->fetchAll($PDO::FETCH_COLUMN);
+                    if($this->isRelevant($LastDate,$SelectedDate[0])) {
+                        $Events = new \Events\Event();
+                        $EventName = $Events->getEventName($EventID);
+                        $ParticipantStatus = $Events->getParticipantStatus($EventID, $UserID);
+                        $Pariticipants = $Events->getNumberOfParticipants($EventID);
+                        $GroupsForEvent = $Events->getGroupsForEvent($EventID);
+                        if ($GroupsForEvent != 22) {
+                            $GroupStatus = array();
+                            foreach ($GroupsForEvent as $GroupID) {
+                                $GroupKind = $this->getGroupKind($GroupID);
+                                $GroupKind = array("0" => $GroupKind);
+                                $GroupStatus = array_merge($GroupStatus, $GroupKind);
+                            }
+                            $return =  array("0" => $EventName, "1" => $ParticipantStatus, "2" => $Pariticipants, "3" => $GroupStatus, "4" => $GroupsForEvent);
+                            array_push($temp,$return);
+                        }
+                        else{
+                            $GroupStatus = array("0" =>0);
+                            $GroupsForEvent = array("0" => 0);
+                            $return = array("0" => $EventName, "1" => $ParticipantStatus, "2" => $Pariticipants, "3" => $GroupStatus, "4" => $GroupsForEvent);
+                            array_push($temp,$return);
+                        }
+                    }
                 }
-                $return = array_merge($return,array("0"=>$EventName,"1"=>$ParticipantStatus,"2"=>$Pariticipants,"3"=>$GroupStatus,"4"=>$GroupsForEvent));
             }
-            return $return;
+            return $temp;
         }
         else return 2;
     }
@@ -564,4 +580,22 @@ class group
         if($stmt->execute()) return $stmt->rowCount();
         else return -1;
     }
+
+    /**
+     * Prüft ob Lastdate kleiner als selectedDate ist
+     * @param $LastDate
+     * @param $SelectedTime
+     * @return bool
+     */
+    private function isRelevant($LastDate,$SelectedDate)
+    {
+        $LastDate = strtotime($LastDate);
+        $SelectedTime = strtotime($SelectedDate);
+        if($LastDate < $SelectedTime)
+        {
+            return true;
+        }
+        else return false;
+    }
+
 }

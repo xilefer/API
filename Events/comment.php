@@ -36,7 +36,6 @@ class comment
             $stmt->execute();
         }
         while($stmt->rowCount() != 0);
-        echo $ID;
         return $ID;
     }
 
