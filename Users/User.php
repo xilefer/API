@@ -24,7 +24,11 @@ private $Group;
         $this->Group = new \Groups\group();
     }
 
-
+    /**
+     * @param $UserID
+     * @return array|string
+     * Gibt den Benutzernamen des Users zurück
+     */
     public function getUser($UserID)
     {
         $database = $this->database;
@@ -47,6 +51,13 @@ private $Group;
         }
     }
 
+    /**
+     * @param $Email
+     * @param $Password
+     * @param $Username
+     * @return array|int
+     * Legt einen neuen Benutzer an
+     */
     public function newUser($Email,$Password,$Username)
     {
         $database = $this->database;
@@ -81,6 +92,11 @@ private $Group;
     }
 
 
+    /**
+     * @param $Email
+     * @return bool
+     * Prüft ob die Email bereits vorhanden ist
+     */
     public function checkUser($Email)
     {
         $database = $this->database;
@@ -99,6 +115,11 @@ private $Group;
         }
     }
 
+    /**
+     * @param $ID
+     * @return bool
+     * Prüft ob die UserID bereits vergeben ist
+     */
     private function checkUserID($ID)
     {
         $database = $this->database;
@@ -117,6 +138,12 @@ private $Group;
         }
     }
 
+    /**
+     * @param $Email
+     * @param $Password
+     * @return string
+     * Prüft ob die Anmeldedaten korrekt sind
+     */
     public function verifyUser($Email,$Password)
     {
         $PDO = $this->PDO;
@@ -133,6 +160,11 @@ private $Group;
         }
     }
 
+    /**
+     * @param $Username
+     * @return int
+     * Versendet die Aktivierungsmail an den Benutzer
+     */
     private function sendMail($Username)
     {
             $PDO = $this->PDO;
@@ -166,6 +198,12 @@ private $Group;
 
     }
 
+    /**
+     * @param $UserID
+     * @param $Property
+     * @return string
+     * Ruft eine bestimmte Eigenschaft eines Benutzers ab
+     */
     private function getProperty($UserID,$Property)
     {
         $PDO=$this->PDO;
@@ -174,6 +212,12 @@ private $Group;
         return $Value;
     }
 
+    /**
+     * @param $Username
+     * @param $Token
+     * @return bool
+     * Aktiviert einen Account
+     */
     public function activateAccount($Username,$Token)
     {
         $PDO = $this->PDO;
@@ -193,6 +237,13 @@ private $Group;
 
     }
 
+    /**
+     * @param $UserID
+     * @param $Table
+     * @param $Value
+     * @return bool
+     * Ändert den Angegeben Wert in der Datenbank
+     */
     public function setValue($UserID,$Table,$Value)
     {
 
@@ -219,6 +270,12 @@ private $Group;
             return false;
         }
     }
+
+    /**
+     * @param $UserID
+     * @return int
+     * Löscht einen Benutzer aus der Datenbank
+     */
     public function deleteUser($UserID)
     {
 
@@ -252,6 +309,11 @@ private $Group;
 
     }
 
+    /**
+     * @param $Email
+     * @return string
+     * Gibt die UserID zurück
+     */
     public function getUserID($Email){
         $PDO = $this->PDO;
         $query = "SELECT `UserID` FROM `user` WHERE `Email`= '$Email'";
@@ -259,6 +321,11 @@ private $Group;
         return $UserID;
     }
 
+    /**
+     * @param $LoginToken
+     * @return bool
+     * Überprüft das LoginToken auf Gültigkeit
+     */
     public function checkLoginToken($LoginToken){
         $PDO=$this->PDO;
         $query = "SELECT `UserID` FROM `user` WHERE `LoginToken`='$LoginToken'";
@@ -270,6 +337,11 @@ private $Group;
         else return true;
     }
 
+    /**
+     * @param $Email
+     * @return array
+     * Funktion zum einloggen eines Benutzers
+     */
     public function loginUser($Email){
         $PDO = $this->PDO;
         $checkquery = "SELECT `LoginToken` FROM `user` WHERE `Email`='$Email'";
@@ -294,6 +366,12 @@ private $Group;
 
     }
 
+    /**
+     * @param $Token
+     * @return bool|string
+     * Überprüft ob das LoginToken zu einem Benutzer gehört und
+     * gibt die ID des Benutzers zurück
+     */
     public function verifyToken($Token){
         $PDO = $this->PDO;
         $query = "SELECT `UserID` FROM `user` WHERE `LoginToken`= '$Token'";

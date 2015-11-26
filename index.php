@@ -587,52 +587,50 @@ switch ($method) {
 
             case ('Events'):
                 $data = "";
-                switch($URIs[3]){
+                switch($URIs[3]) {
                     case('Event'):
                         echo count($URIs);
-                        if(count($URIs) != 5){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
+                        if (count($URIs) != 5) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data = $Events->deleteEvent($URIs[4],$UserID); //Returncodes: 0,20,27,28
-                        if($data == 0){
-                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
-                        }else if($data == 20){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_UserNotEventOwner);
-                        }else if($data == 27){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteEvent);
-                        }else if($data == 28){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteParticipant);
+                        $data = $Events->deleteEvent($URIs[4], $UserID); //Returncodes: 0,20,27,28
+                        if ($data == 0) {
+                            $return->createReturn(null, \enum\statuscodes::OK, \enum\returncodes::Success);
+                        } else if ($data == 20) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::Error_UserNotEventOwner);
+                        } else if ($data == 27) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::Error_CantDeleteEvent);
+                        } else if ($data == 28) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::Error_CantDeleteParticipant);
                         }
                         break;
 
                     case('Participant'):
-                        if(count($URIs) != 6){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
+                        if (count($URIs) != 6) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data = $Events->deleteParticipant($URIs[4],$URIs[5]);
-                        if($data == 0){
-                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
-                        }else if($data == 28){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteParticipant);
+                        $data = $Events->deleteParticipant($URIs[4], $URIs[5]);
+                        if ($data == 0) {
+                            $return->createReturn(null, \enum\statuscodes::OK, \enum\returncodes::Success);
+                        } else if ($data == 28) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::Error_CantDeleteParticipant);
                         }
                         break;
 
                     case('Group'):
-                        if(count($URIs) != 6){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
+                        if (count($URIs) != 6) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data = $Events->removeGroup($URIs[4],$URIs[5]);
-                        if($data == 0){
-                            $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
-                        }
-                        else if($data == 29){
-                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantDeleteGroupFromEvent);
+                        $data = $Events->removeGroup($URIs[4], $URIs[5]);
+                        if ($data == 0) {
+                            $return->createReturn(null, \enum\statuscodes::OK, \enum\returncodes::Success);
+                        } else if ($data == 29) {
+                            $return->createReturn(null, \enum\statuscodes::BAD_REQUEST, \enum\returncodes::Error_CantDeleteGroupFromEvent);
                         }
                         break;
-
                     case('Comment'):
                         if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
