@@ -137,11 +137,10 @@ switch ($method) {
                         break;
 
                     case('NotParticipating'):
-                        if(count($URIs) != 4){
+                        if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                             break;
                         }
-                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID);
                         $UserID = $Users->getUserID($Username);
                         $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID,$URIs[4]);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);

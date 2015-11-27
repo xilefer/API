@@ -461,18 +461,28 @@ class group
             $EventsForGroup = $this->getEventsForGroup($GroupID);
             foreach($EventsForGroup as $EventID)
             {
-                if($Events->isParticipant($UserID,$EventID))
+                $PDO = $this->PDO;
+                $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
+                $stmt = $PDO->prepare($query);
+                $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+                if($stmt->execute())
                 {
-                    //Ist nicht relevant
-                }
-                else
-                {
-                    $EventName = $Events->getEventName($EventID);
-                    $EventParticipants = $Events->getNumberOfParticipants($EventID);
-                    $GroupStatus = $this->getGroupKind($GroupID);
-                    $GroupsForEvent = $Events->getGroupsForEvent($EventID);
-                    $EventProperties = array("0" => $EventName, "1" => $EventParticipants, "2"=>$GroupStatus,"3"=>$GroupsForEvent);
-                    $return = array_merge($return,$EventProperties);
+                    if($this->isRelevant($LastDate,$stmt->fetchColumn(0)[0]))
+                    {
+                        if($Events->isParticipant($UserID,$EventID))
+                        {
+                            //Ist nicht relevant
+                        }
+                        else
+                        {
+                            $EventName = $Events->getEventName($EventID);
+                            $EventParticipants = $Events->getNumberOfParticipants($EventID);
+                            $GroupStatus = $this->getGroupKind($GroupID);
+                            $GroupsForEvent = $Events->getGroupsForEvent($EventID);
+                            $EventProperties = array("0" => $EventName, "1" => $EventParticipants, "2"=>$GroupStatus,"3"=>$GroupsForEvent);
+                            $return = array_merge($return,$EventProperties);
+                        }
+                    }
                 }
             }
         }
