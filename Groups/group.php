@@ -609,4 +609,48 @@ class group
         else return false;
     }
 
+    /***
+     * Rückgabe: Name, Status, MaxTeilnehmer, Aktuelle Teilnehmer, TeilnehmerIDs
+     */
+    public function getGroupProperties($GroupID)
+    {
+        $Users = new \Users\User();
+        $PDO = $this->PDO;
+        $query = "SELECT GroupName , Accessibility ,MaxMembers FROM `group` WHERE `GroupID` = :GroupID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            if($stmt->rowCount() == 0) return 302;
+            $returnarray = $stmt->fetchAll($PDO::FETCH_ASSOC);
+            $Name = $returnarray[0]["GroupName"];
+            $Status = $returnarray[0]["Accessibility"];
+            $MaxMembers = $returnarray[0]["MaxMembers"];
+            //Jetzt noch die Nutzer zählen und in einem Array ausgeben
+            $query = "SELECT UserID FROM `groupmember` WHERE GroupID = :GroupID";
+            $stmt = $PDO->prepare($query);
+            $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+            if($stmt->execute()){
+                $AktTeilnehmer = $stmt->rowCount();
+                if($AktTeilnehmer == 0){
+                    //Keine Teilnehmer gefunden
+                }
+                $UserIDS = $stmt->fetchall($PDO::FETCH_COLUMN);
+                $UserNames = array();
+                foreach($UserIDS as $UserID)
+                {
+                    //Hier ist noch ein Fehler drin
+                    $UserName = $Users->getUser($UserID);
+                    array_push($UserNames,$UserName);
+                }
+            }
+            else{
+                return 303;
+            }
+        }
+        else{
+            return 302;
+        }
+        $return = array("GroupName" => $Name, "Status" => $Status,"AktuelleTeilnehmer" => $AktTeilnehmer, "MaximaleTeilnehmer" => $MaxMembers, "Teilnehmer" => $UserNames);
+        return $return;
+    }
 }

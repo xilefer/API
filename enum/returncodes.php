@@ -63,6 +63,8 @@ class returncodes extends Enum{
     const Error_CannotDeleteUserFromGroup = 38;
     const Error_CantDeleteGroupEvents = 39;
     const Error_NoGroupWithSuchName = 301;
+    const Error_CantFindGroup = 302;
+    const Error_NoMembersForGroup = 303;
 
     //LocationErrorCodes;
     const Error_UserNotLocationOwner = 40;

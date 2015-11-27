@@ -146,6 +146,23 @@ switch ($method) {
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
 
+                    case('Properties'):
+                        if(count($URIs) != 5){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                            break;
+                        }
+                        $data = $Groups->getGroupProperties($URIs[4]);
+                        if($data == 302){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantFindGroup);
+                            break;
+                        }else if($data == 303){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_NoMembersForGroup);
+                            break;
+                        }else{
+                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                            break;
+                        }
+                        break;
                 }
                 break;
 
