@@ -558,6 +558,7 @@ class group
         $temp .='%';
         $stmt->bindParam(":Filter",$temp,$PDO::PARAM_STR);
         if($stmt->execute()){
+            if($stmt->rowCount() == 0) return 301;
             $return = array();
             $GroupIDS = $stmt->fetchAll($PDO::FETCH_COLUMN);
             foreach($GroupIDS as $GroupID)
@@ -569,7 +570,7 @@ class group
             }
             return $return;
         }
-        else echo "Falsch";
+        else{} //echo "Falsch";
     }
     private function getGroupName($GroupID)
     {

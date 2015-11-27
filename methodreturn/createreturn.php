@@ -23,7 +23,7 @@ class createreturn {
         $response = $this->response;
         $response->registerHeader(\enum\Headerfields::CONTENT_TYPE,'application/json');
         if($returncode==0){
-            $data['Returncode']='0';
+            $data['Returncode']=0;
             $response->setStatuscode($status);
         }
         else{
