@@ -29,8 +29,8 @@ if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
     $Auth=$Users->verifyUser($Username,$PW);
     if($Auth == 'Error'){
         $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
-}
-    else
+    }
+    else if($URIs[2] == 'Login')
     {
         $data=$Users->loginUser($Username);
         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
