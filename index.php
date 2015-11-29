@@ -81,7 +81,10 @@ switch ($method) {
         switch ($URIs[2]) {
 
             case ("Users"):
-                $data=$Users->getUser($UserID);
+                if(count($URIs) != 4){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                }
+                $data=$Users->getUser($URIs[3]);
                 if($data == 'Error')
                 {
                     $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_UserDoesnotexist);
@@ -276,7 +279,7 @@ switch ($method) {
     case (\enum\Methods::PUT):
         switch ($URIs[2]) {
             case ("Users"):
-                if(count($URIs) != 8) {
+                if(count($URIs) != 6) {
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                 }
                 elseif($UserID != 312623){

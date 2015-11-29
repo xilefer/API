@@ -25,23 +25,44 @@ private $Group;
     }
 
     /**
+     * Gibt den Nickname eines Benutzers zurück
+     * @param $UserID
+     */
+    public function getNickname($UserID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT `Username` FROM `user` WHERE UserID = :UserID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        if($stmt->execute())
+        {
+            if($stmt->rowCount() != 0){
+                $return = $stmt->fetchColumn();
+                return $return;
+            }
+            else return 102;
+        }
+        else return 7;
+    }
+    /**
      * @param $UserID
      * @return array|string
      * Gibt den Benutzernamen des Users zurück
      */
-    public function getUser($UserID)
+    public function getUser($Email)
     {
         $database = $this->database;
         $sqlserver = $this->sqlserver;
-        $query = "SELECT * FROM user WHERE `UserID` = '$UserID'";
+        $query = "SELECT * FROM user WHERE `EMail` = '$Email'";
         $this->PDO->query($query);
         $result= mysql_db_query($database, $query, $sqlserver);
         while ($row = mysql_fetch_object($result)) {
             $User = $row->Username;
+            $UserID = $row->UserID;
         }
         if(isset($User))
         {
-            $data = array('Username' => "$User");
+            $data = array('Username' => "$User",'UserID' => "$UserID");
             return $data;
         }
         else
@@ -79,7 +100,7 @@ private $Group;
         $query = "INSERT INTO `User`(`UserID`, `Username`, `Password`, `Email`, `Activated`, `ActivateToken` ) VALUES ('$ID','$Username','$Crypt','$Email','FALSE','$ActivateToken')";
         mysql_db_query($database, $query, $sqlserver);
         $Mail=$this->sendMail($Username);
-        $data=$this->getUser($ID);
+        $data=$this->getNickname($ID);
         if(isset($data['Username']) and $Mail==1)
         {
             return 2;
@@ -291,7 +312,7 @@ private $Group;
         $PDO->query($query);
         $Eventreturn=$event->deleteUserFromEvent($UserID);//0 wenn erfolgreich 1 sonst
         $Groupreturn=$group->deleteUserFromGroup($UserID);//0 wenn erfolgreich 1 sonst
-        $check=$this->getUser($Username);
+        $check=$this->getNickname($UserID);
         if($Eventreturn==1){
             return 3;
         }

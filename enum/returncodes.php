@@ -33,6 +33,7 @@ class returncodes extends Enum{
     const Error_CannotsetValuesofotherUsers= 19;
     const Error_WrongUsernameorLoginToken = 100;
     const Error_BadPermission = 101;
+    const Error_UserNotFound = 102;
 
 
     //EventErrorCodes:

@@ -639,8 +639,11 @@ class group
                 foreach($UserIDS as $UserID)
                 {
                     //Hier ist noch ein Fehler drin
-                    $UserName = $Users->getUser($UserID);
-                    array_push($UserNames,$UserName);
+                    $UserName = $Users->getNickname($UserID);
+                    if($UserName != 102 && $UserNames != 7){
+                        array_push($UserNames,$UserName);
+                    }
+
                 }
             }
             else{
