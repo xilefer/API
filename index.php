@@ -29,6 +29,7 @@ if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
     $Auth=$Users->verifyUser($Username,$PW);
     if($Auth == 'Error'){
         $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
+        exit;
     }
     else if($URIs[2] == 'Login')
     {
@@ -145,7 +146,8 @@ switch ($method) {
                             break;
                         }
                         $UserID = $Users->getUserID($Username);
-                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID,$URIs[4]);
+                        $tempvar = str_replace('%20','',$URIs[4]);
+                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating(1,$tempvar);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
 
@@ -238,7 +240,6 @@ switch ($method) {
                         else
                         {
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
-                            print_r($data);
                         }
                         break;
                 }
@@ -265,10 +266,16 @@ switch ($method) {
                 }
                 break;
 
+            case ('Comments'):
+                if(count($URIs) != 3)
+
+                break;
+
             case ('test'):
                 //print_r($Groups->getEventsForUserWhereUserIsNotParticipating(1));
-                $Wichser = $Groups->getEventsForUserWhereUserIsParticipating(1,time());
-                print_r($Wichser);
+                $Wichser = $Groups->getEventsForUserWhereUserIsNotParticipating(1,"");
+                $return->createReturn($Wichser,\enum\statuscodes::OK,\enum\returncodes::Success);
+                //print_r($Wichser);
                 //echo 'TEST';
                 //echo $Users->checkUser('Christopher_Schroth@hotmail.de');
                 //hier Testmethoden einfügen

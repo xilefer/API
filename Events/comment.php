@@ -60,7 +60,7 @@ class comment
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if($stmt->execute()) return $stmt->fetchAll($PDO::FETCH_ASSOC);
+        if($stmt->execute()) return array("Comments" =>  $stmt->fetchAll($PDO::FETCH_ASSOC));
         else return 51;
     }
 

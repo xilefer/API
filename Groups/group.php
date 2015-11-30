@@ -357,7 +357,7 @@ class group
         if($stmt->execute()){
             $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
             if(count($return) == 0) return 32;
-            return $return;
+            return array("Groups" =>$return);
         }
         else return 12;
     }//Index
@@ -455,7 +455,7 @@ class group
     {
         $return = array();
         $Groups = $this->getGroupsForUser($UserID);
-        foreach($Groups as $GroupID)
+        foreach($Groups['Groups'] as $GroupID)
         {
             $Events = new \Events\Event();
             $EventsForGroup = $this->getEventsForGroup($GroupID);
@@ -467,7 +467,7 @@ class group
                 $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
                 if($stmt->execute())
                 {
-                    if($this->isRelevant($LastDate,$stmt->fetchColumn(0)[0]))
+                    if($this->isRelevant($LastDate,$stmt->fetchColumn(0)))
                     {
                         if($Events->isParticipant($UserID,$EventID))
                         {
@@ -480,13 +480,13 @@ class group
                             $GroupStatus = $this->getGroupKind($GroupID);
                             $GroupsForEvent = $Events->getGroupsForEvent($EventID);
                             $EventProperties = array("0" => $EventName, "1" => $EventParticipants, "2"=>$GroupStatus,"3"=>$GroupsForEvent);
-                            $return = array_merge($return,$EventProperties);
+                            $return = array_merge($return,array($EventProperties));
                         }
                     }
                 }
             }
         }
-        return $return;
+        return array("Events" =>$return);
     }
 
 
@@ -537,7 +537,7 @@ class group
                     }
                 }
             }
-            return $temp;
+            return array("Events" =>$temp);
         }
         else return 2;
     }
@@ -566,8 +566,11 @@ class group
                 $GroupMembers = $this->countMembers($GroupID);
                 $GroupName = $this->getGroupName($GroupID);
                 $GroupKind = $this->getGroupKind($GroupID);
-                $return = array_merge($return, array("0"=>$GroupName,"1"=>$GroupMembers,"3"=>$GroupKind));
+                $temp = array("GroupName"=>$GroupName,"GroupMembers"=>$GroupMembers,"Status"=>$GroupKind);
+                //$return = array_merge($return,array($temp) );
+                array_push($return,$temp);
             }
+            $return = array("Groups" => $return);
             return $return;
         }
         else{} //echo "Falsch";

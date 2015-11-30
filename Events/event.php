@@ -320,7 +320,7 @@ class Event
         if($stmt->execute()) {
             $GroupIDS = $stmt->fetchAll($PDO::FETCH_COLUMN);
             if(count($GroupIDS) == 0) return 22;
-            else return $GroupIDS;
+            else return array("Groups" =>$GroupIDS);
         }
         else return 7;
     }//Index
@@ -408,7 +408,7 @@ class Event
             if($stmt->rowCount() == 0) {
                 return 23;
             }else{
-                return $stmt->fetchAll($PDO::FETCH_ASSOC);
+                return array("Users" =>$stmt->fetchAll($PDO::FETCH_ASSOC));
             }
         }
         else return 7;
