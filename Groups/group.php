@@ -656,7 +656,7 @@ class group
         else{
             return 302;
         }
-        $return = array("GroupName" => $Name, "Status" => $Status,"AktuelleTeilnehmer" => $AktTeilnehmer, "MaximaleTeilnehmer" => $MaxMembers, "Teilnehmer" => $UserNames);
+        $return = array("GroupName" => $Name, "Status" => $Status,"CurrrentMember" => $AktTeilnehmer, "MaximalMembers" => $MaxMembers, "Members" => $UserNames);
         return $return;
     }
 }
