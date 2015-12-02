@@ -347,6 +347,24 @@ class group
         else return 37;
     }
 
+    public function getGroupsForUserWithInformation($UserID){
+        $GroupIDs = $this->getGroupsForUser($UserID);
+        if($GroupIDs == 32){
+            return 32;
+        }
+        else if($GroupIDs == 12){
+            return 12;
+        }
+        $ResultArray = array();
+        foreach($GroupIDs['Groups'] as $GroupID){
+            $GroupID = $GroupID["GroupID"];
+            $GroupProperties = $this->getGroupProperties($GroupID,"2002-12-12 12:20");
+            $GroupProperties["GroupID"] = $GroupID;
+            array_push($ResultArray,$GroupProperties);
+        }
+        return array("Groups" => $ResultArray);
+    }
+
     //Gibt alle GroupID`s zurück in denen der User ist
     public function getGroupsForUser($UserID)
     {
@@ -365,7 +383,7 @@ class group
         }
         else return 12;
     }//Index
-    //Gibtt alle GroupID`s zurück die dem User gehören
+    //Gibt alle GroupID`s zurück die dem User gehören
     public function getGroupsWhereUserIsOwner($UserID)
     {
         $PDO = $this->PDO;
@@ -675,7 +693,6 @@ class group
             return 302;
         }
         $return = array("GroupName" => $Name, "Status" => $Status,"CurrrentMembers" => $AktTeilnehmer, "MaximalMembers" => $MaxMembers, "Members" => $UserNames);
-        print_r($return);
         return $return;
     }
 }

@@ -84,11 +84,11 @@ switch ($method) {
             case ('Groups'):
                 switch($URIs[3]){
                     case('Group'):
-                        if(count($URIs) != 5){
+                        if(count($URIs) != 4){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data=$Groups->getGroupsForUser($URIs[4]);
+                        $data=$Groups->getGroupsForUserWithInformation($UserID);
                         if($data == 32){
                             $return->createReturn(null,enum\statuscodes::NOT_FOUND,enum\returncodes::Error_UserHasNoGroups);
                         }
@@ -270,8 +270,9 @@ switch ($method) {
 
             case ('test'):
                 //print_r($Groups->getEventsForUserWhereUserIsNotParticipating(1));
-                $Wichser = $Groups->getEventsForUserWhereUserIsNotParticipating(1,"");
-                $return->createReturn($Wichser,\enum\statuscodes::OK,\enum\returncodes::Success);
+                $data = $Groups->getGroupsForUserWithInformation($UserID);
+                $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                //$return->createReturn($Wichser,\enum\statuscodes::OK,\enum\returncodes::Success);
                 //print_r($Wichser);
                 //echo 'TEST';
                 //echo $Users->checkUser('Christopher_Schroth@hotmail.de');
