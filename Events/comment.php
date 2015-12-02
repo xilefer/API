@@ -9,6 +9,8 @@
 namespace Events;
 
 
+use Users\User;
+
 class comment
 {
 
@@ -42,13 +44,16 @@ class comment
     public function newComment($EventID,$Comment,$UserID)
     {
         $PDO = $this->PDO;
-        $query = "INSERT INTO `eventcomment` (`CommentID`, `EventID`, `UserID`, `Text`) VALUES (:CommentID, :EventID, :UserID, :Text)";
+        $query = "INSERT INTO `eventcomment` (`CommentID`, `EventID`, `UserID`,`UserName`, `Text`) VALUES (:CommentID, :EventID, :UserID, :UserName, :Text)";
         $CommentID = $this->generateCommentID();
         $Comment = str_replace("%20",' ',$Comment);
         $stmt = $PDO->prepare($query);
+        $Users = new \Users\User();
+        $UserName = $Users->getNickname($UserID);
         $stmt->bindParam(":CommentID",$CommentID,$PDO::PARAM_INT);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
+        $stmt->bindParam(":UserName",$UserName,$PDO::PARAM_STR);
         $stmt->bindParam(":Text",$Comment,$PDO::PARAM_STR);
         if($stmt->execute()) return 0;
         else return 50;
@@ -56,11 +61,19 @@ class comment
 
     public function getCommentsForEvent($EventID)
     {
-        $query ="SELECT UserID,Text,CreationDate FROM `eventcomment` WHERE EventID = :EventID";
+        $query ="SELECT UserName,UserID,Text,CreationDate FROM `eventcomment` WHERE EventID = :EventID";
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if($stmt->execute()) return array("Comments" =>  $stmt->fetchAll($PDO::FETCH_ASSOC));
+        if($stmt->execute()) {
+            $Comments = $stmt->fetchAll($PDO::FETCH_ASSOC);
+            $temp2 = array();
+            foreach($Comments as $Comment){
+                array_push($temp2,array("Comment" => $Comment));
+            }
+            return array("Comments" => $temp2);
+            //return array("Comments" =>  $stmt->fetchAll($PDO::FETCH_ASSOC));
+        }
         else return 51;
     }
 

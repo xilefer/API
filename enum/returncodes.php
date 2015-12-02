@@ -19,6 +19,7 @@ class returncodes extends Enum{
     const General_WrongNumberOfParameter = 5;
     const General_CantSetValue = 6;
     const General_QueryError = 7;
+    const General_WrongDateFormat = 8;
 
     //UserErrorCodes;
     const Error_Emailnotsent = 10;

@@ -122,7 +122,8 @@ switch ($method) {
                             break;
                         }
                         $UserID = $Users->getUserID($Username);
-                        $data = $Groups->getEventsForUserWhereUserIsParticipating($UserID,$URIs[4]);
+                        $tempvar = str_replace('%20',' ',$URIs[4]);
+                        $data = $Groups->getEventsForUserWhereUserIsParticipating(1,$tempvar);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
 
@@ -138,18 +139,21 @@ switch ($method) {
                         break;
 
                     case('Properties'):
-                        if(count($URIs) != 5){
+                        if(count($URIs) != 6){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                             break;
                         }
-                        $data = $Groups->getGroupProperties($URIs[4]);
+                        $data = $Groups->getGroupProperties($URIs[4],$URIs[5]);
                         if($data == 302){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantFindGroup);
                             break;
                         }else if($data == 303){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_NoMembersForGroup);
                             break;
-                        }else{
+                        }else if($data == 8){
+                            $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongDateFormat);
+                        }
+                        else{
                             $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                             break;
                         }
@@ -191,7 +195,7 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::NOT_FOUND,\enum\returncodes::Error_NoGroupsForThisEvent);
                         }
                         else{
-                            $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                            $return->createReturn(array("Groups" => $data),\enum\statuscodes::OK,\enum\returncodes::Success);
                         }
                         break;
 
@@ -253,8 +257,15 @@ switch ($method) {
                 break;
 
             case ('Comments'):
-                if(count($URIs) != 3)
-
+                if(count($URIs) != 4){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                }
+                $data = $Comments->getCommentsForEvent($URIs[3]);
+                if($data == 51){
+                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_NoCommentsForEvent);
+                }else{
+                    $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
+                }
                 break;
 
             case ('test'):

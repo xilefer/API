@@ -356,8 +356,12 @@ class group
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            $temp = array();
+            foreach($return as $GroupID){
+                array_push($temp,array("GroupID" =>$GroupID));
+            }
             if(count($return) == 0) return 32;
-            return array("Groups" =>$return);
+            return array("Groups" =>$temp);
         }
         else return 12;
     }//Index
@@ -428,20 +432,25 @@ class group
     private function getEventsForGroup($GroupID)
     {
         $PDO = $this->PDO;
-        $query = "SELECT EventID FROM `groupevents` WHERE GroupID = :GroupID";
+        $query = "SELECT `EventID` FROM `groupevents` WHERE GroupID = :GroupID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
-        if($stmt->execute()) return $stmt->fetchAll($PDO::FETCH_COLUMN);
+        if($stmt->execute()) {
+            return $stmt->fetchAll($PDO::FETCH_COLUMN);
+        }
         else return 0;
     }
 
     public function getGroupKind($GroupID)
     {
         $PDO = $this->PDO;
-        $query = "SELECT Accessibility FROM `group` WHERE GroupID = :GroupID";
+        $query = "SELECT `Accessibility` FROM `group` WHERE GroupID = :GroupID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
-        if($stmt->execute()) return $stmt->fetchAll($PDO::FETCH_COLUMN)[0];
+        if($stmt->execute()){
+            $test = $stmt->fetchAll($PDO::FETCH_COLUMN);
+            return $test[0];
+        }
         else return 0;
     }
 
@@ -457,6 +466,7 @@ class group
         $Groups = $this->getGroupsForUser($UserID);
         foreach($Groups['Groups'] as $GroupID)
         {
+            $GroupID = $GroupID['GroupID'];
             $Events = new \Events\Event();
             $EventsForGroup = $this->getEventsForGroup($GroupID);
             foreach($EventsForGroup as $EventID)
@@ -479,8 +489,8 @@ class group
                             $EventParticipants = $Events->getNumberOfParticipants($EventID);
                             $GroupStatus = $this->getGroupKind($GroupID);
                             $GroupsForEvent = $Events->getGroupsForEvent($EventID);
-                            $EventProperties = array("0" => $EventName, "1" => $EventParticipants, "2"=>$GroupStatus,"3"=>$GroupsForEvent);
-                            $return = array_merge($return,array($EventProperties));
+                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName, "Participants" => $EventParticipants, "Status"=>$GroupStatus,"Groups"=>$GroupsForEvent);
+                            array_push($return,$EventProperties);
                         }
                     }
                 }
@@ -521,17 +531,19 @@ class group
                         if ($GroupsForEvent != 22) {
                             $GroupStatus = array();
                             foreach ($GroupsForEvent as $GroupID) {
+                                $GroupID =  $GroupID['GroupID'];
                                 $GroupKind = $this->getGroupKind($GroupID);
-                                $GroupKind = array("0" => $GroupKind);
-                                $GroupStatus = array_merge($GroupStatus, $GroupKind);
+                                //echo "Pimmel".$GroupKind;
+                                $GroupKind = array("Status" => $GroupKind);
+                                array_push($GroupStatus, $GroupKind);
                             }
-                            $return =  array("0" => $EventName, "1" => $ParticipantStatus, "2" => $Pariticipants, "3" => $GroupStatus, "4" => $GroupsForEvent);
+                            $return =  array("EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
                             array_push($temp,$return);
                         }
                         else{
-                            $GroupStatus = array("0" =>0);
-                            $GroupsForEvent = array("0" => 0);
-                            $return = array("0" => $EventName, "1" => $ParticipantStatus, "2" => $Pariticipants, "3" => $GroupStatus, "4" => $GroupsForEvent);
+                            $GroupStatus = array("Status" =>"NoGroups");
+                            $GroupsForEvent = array("Groups" => "NoGroups");
+                            $return = array("EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
                             array_push($temp,$return);
                         }
                     }
@@ -615,13 +627,19 @@ class group
     /***
      * Rückgabe: Name, Status, MaxTeilnehmer, Aktuelle Teilnehmer, TeilnehmerIDs
      */
-    public function getGroupProperties($GroupID)
+    public function getGroupProperties($GroupID,$LastDate)
     {
+        $LastDate = str_replace('%20','',$LastDate);
         $Users = new \Users\User();
         $PDO = $this->PDO;
-        $query = "SELECT GroupName , Accessibility ,MaxMembers FROM `group` WHERE `GroupID` = :GroupID";
+        $LastTimestamp = strtotime($LastDate);
+        if($LastTimestamp == false){
+            return 8;
+        }
+        $query = "SELECT GroupName , Accessibility ,MaxMembers FROM `group` WHERE `GroupID` = :GroupID AND `ModificationDate` > :LastDate";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
+        $stmt->bindParam(":LastDate",$LastTimestamp,$PDO::PARAM_STR);
         if($stmt->execute()){
             if($stmt->rowCount() == 0) return 302;
             $returnarray = $stmt->fetchAll($PDO::FETCH_ASSOC);
@@ -657,6 +675,7 @@ class group
             return 302;
         }
         $return = array("GroupName" => $Name, "Status" => $Status,"CurrrentMembers" => $AktTeilnehmer, "MaximalMembers" => $MaxMembers, "Members" => $UserNames);
+        print_r($return);
         return $return;
     }
 }

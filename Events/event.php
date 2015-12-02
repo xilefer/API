@@ -319,8 +319,15 @@ class Event
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()) {
             $GroupIDS = $stmt->fetchAll($PDO::FETCH_COLUMN);
+            $temp2 = array();
+            $temp = array();
+            foreach($GroupIDS as $GroupID){
+                $temp['GroupID']=$GroupID;
+                array_push($temp2,$temp);
+            }
             if(count($GroupIDS) == 0) return 22;
-            else return array("Groups" =>$GroupIDS);
+
+            else return $temp2;
         }
         else return 7;
     }//Index
