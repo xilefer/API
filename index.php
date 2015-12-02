@@ -26,27 +26,12 @@ if(isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW']))
 {
     $Username=$_SERVER['PHP_AUTH_USER'];
     $PW= $_SERVER['PHP_AUTH_PW'];
+    $Email=$Username;
     $Auth=$Users->verifyUser($Username,$PW);
     if($Auth == 'Error'){
         $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorPassword);
         exit;
     }
-    else if($URIs[2] == 'Login')
-    {
-        $data=$Users->loginUser($Username);
-        $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
-    }
-}
-elseif(isset($_SERVER['PHP_AUTH_USER']))
-{
-    $count = count($URIs);
-    $lastposition = $count-1;
-    $LoginToken=$_SERVER['PHP_AUTH_USER'];
-    $ID=$Users->verifyToken($LoginToken);
-    if(!$ID){
-        $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_WrongUsernameorLoginToken);
-    }
-    else{$UserID=$ID;}
 }
 elseif($URIs[2]=="Users" and $URIs[3]=="activate")
 {
@@ -75,7 +60,7 @@ else
     $return->createReturn(null,\enum\statuscodes::UNAUTHORIZED,\enum\returncodes::Error_AuthenticationRequired);
     exit;
 }
-$UserID = $Users->getUserID($Username);
+$UserID = $Users->getUserID($Email);
 switch ($method) {
 
     case (\enum\Methods::GET):
@@ -84,6 +69,7 @@ switch ($method) {
             case ("Users"):
                 if(count($URIs) != 4){
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
+                    exit;
                 }
                 $data=$Users->getUser($URIs[3]);
                 if($data == 'Error')
@@ -279,6 +265,9 @@ switch ($method) {
                 //echo 'TEST';
                 //echo $Users->checkUser('Christopher_Schroth@hotmail.de');
                 //hier Testmethoden einfügen
+                break;
+            case ('Login'):
+                $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
                 break;
         }
         break;

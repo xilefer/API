@@ -53,7 +53,7 @@ private $Group;
     {
         $database = $this->database;
         $sqlserver = $this->sqlserver;
-        $query = "SELECT * FROM user WHERE `EMail` = '$Email'";
+        $query = "SELECT * FROM user WHERE `Email` = '$Email'";
         $this->PDO->query($query);
         $result= mysql_db_query($database, $query, $sqlserver);
         while ($row = mysql_fetch_object($result)) {
@@ -62,7 +62,8 @@ private $Group;
         }
         if(isset($User))
         {
-            $data = array('Username' => "$User",'UserID' => "$UserID");
+            $data = array('User'=>array('Username' => "$User",'UserID' => "$UserID"));
+
             return $data;
         }
         else
