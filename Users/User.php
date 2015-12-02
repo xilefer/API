@@ -108,7 +108,7 @@ private $Group;
         }
         elseif(isset($data['Username']) and $Mail==0)
         {
-            $return = array('UserID'=>"$ID");
+            $return = array('User'=>array('UserID'=>"$ID"));
             return $return;
         }
     }
