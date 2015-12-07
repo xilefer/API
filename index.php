@@ -84,11 +84,11 @@ switch ($method) {
             case ('Groups'):
                 switch($URIs[3]){
                     case('Group'):
-                        if(count($URIs) != 4){
+                        if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data=$Groups->getGroupsForUserWithInformation($UserID);
+                        $data=$Groups->getGroupsForUserWithInformation($URIs[4]);
                         if($data == 32){
                             $return->createReturn(null,enum\statuscodes::NOT_FOUND,enum\returncodes::Error_UserHasNoGroups);
                         }
@@ -123,7 +123,7 @@ switch ($method) {
                         }
                         $UserID = $Users->getUserID($Username);
                         $tempvar = str_replace('%20',' ',$URIs[4]);
-                        $data = $Groups->getEventsForUserWhereUserIsParticipating(1,$tempvar);
+                        $data = $Groups->getEventsForUserWhereUserIsParticipating($UserID,$tempvar);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
 
@@ -134,16 +134,16 @@ switch ($method) {
                         }
                         $UserID = $Users->getUserID($Username);
                         $tempvar = str_replace('%20','',$URIs[4]);
-                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating(1,$tempvar);
+                        $data = $Groups->getEventsForUserWhereUserIsNotParticipating($UserID,$tempvar);
                         $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
                         break;
 
                     case('Properties'):
-                        if(count($URIs) != 6){
+                        if(count($URIs) != 5){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
                             break;
                         }
-                        $data = $Groups->getGroupProperties($URIs[4],$URIs[5]);
+                        $data = $Groups->getGroupProperties($URIs[4]);
                         if($data == 302){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantFindGroup);
                             break;
@@ -394,7 +394,7 @@ switch ($method) {
                 switch($URIs[3]){
 
                     case('Event'):
-                        if(count($URIs) != 12){
+                        if(count($URIs) != 12 && count($URIs) != 13){
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
@@ -403,6 +403,7 @@ switch ($method) {
                         $UserID = $Users->getUserID($Username);
                         //Location ID soll noch entfernt werden
                         $data = $Events->newEvent($URIs[4],0,$Starttime,$Endtime,$URIs[7],$URIs[8],$UserID,$URIs[9],$URIs[10],$URIs[11]);
+
                         if($data == 7){
                             $return->createReturn(null, \enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
                         }
@@ -416,8 +417,22 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_ParticipantAlreadyExisting);
                         }
                         else{
-                            $data = array("EventID" => $data);
-                            $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                            if(count($URIs) == 13){
+                                $EventData = $Events->addGroup($data,$URIs[12]);
+                                if($EventData == 203){
+                                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_GroupAlreadyAdded);
+                                }else if($EventData == 26){
+                                    $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_CantAddGroupToThisEvent);
+                                }else{
+                                    $data = array("EventID" => $data);
+                                    $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                                }
+                            }else{
+                                $data = array("EventID" => $data);
+                                $return->createReturn($data,\enum\statuscodes::CREATED,\enum\returncodes::Success);
+                            }
+
+
                         }
                         break;
 

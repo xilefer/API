@@ -555,13 +555,13 @@ class group
                                 $GroupKind = array("Status" => $GroupKind);
                                 array_push($GroupStatus, $GroupKind);
                             }
-                            $return =  array("EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
+                            $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
                             array_push($temp,$return);
                         }
                         else{
                             $GroupStatus = array("Status" =>"NoGroups");
                             $GroupsForEvent = array("Groups" => "NoGroups");
-                            $return = array("EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
+                            $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
                             array_push($temp,$return);
                         }
                     }
@@ -645,19 +645,14 @@ class group
     /***
      * Rückgabe: Name, Status, MaxTeilnehmer, Aktuelle Teilnehmer, TeilnehmerIDs
      */
-    public function getGroupProperties($GroupID,$LastDate)
+    public function getGroupProperties($GroupID)
     {
-        $LastDate = str_replace('%20','',$LastDate);
         $Users = new \Users\User();
         $PDO = $this->PDO;
-        $LastTimestamp = strtotime($LastDate);
-        if($LastTimestamp == false){
-            return 8;
-        }
-        $query = "SELECT GroupName , Accessibility ,MaxMembers FROM `group` WHERE `GroupID` = :GroupID AND `ModificationDate` > :LastDate";
+        $query = "SELECT GroupName , Accessibility ,MaxMembers FROM `group` WHERE `GroupID` = :GroupID";
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":GroupID",$GroupID,$PDO::PARAM_INT);
-        $stmt->bindParam(":LastDate",$LastTimestamp,$PDO::PARAM_STR);
+        //$stmt->bindParam(":LastDate",$LastTimestamp,$PDO::PARAM_STR);
         if($stmt->execute()){
             if($stmt->rowCount() == 0) return 302;
             $returnarray = $stmt->fetchAll($PDO::FETCH_ASSOC);
@@ -680,6 +675,7 @@ class group
                     //Hier ist noch ein Fehler drin
                     $UserName = $Users->getNickname($UserID);
                     if($UserName != 102 && $UserNames != 7){
+                        $UserName = array("UserName" => $UserName);
                         array_push($UserNames,$UserName);
                     }
 
@@ -692,7 +688,7 @@ class group
         else{
             return 302;
         }
-        $return = array("GroupName" => $Name, "Status" => $Status,"CurrrentMembers" => $AktTeilnehmer, "MaximalMembers" => $MaxMembers, "Members" => $UserNames);
+        $return = array("GroupName" => $Name, "Status" => $Status,"CurrentMembers" => $AktTeilnehmer, "MaximalMembers" => $MaxMembers, "Members" => $UserNames);
         return $return;
     }
 }
