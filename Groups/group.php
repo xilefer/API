@@ -507,7 +507,14 @@ class group
                             $EventParticipants = $Events->getNumberOfParticipants($EventID);
                             $GroupStatus = $this->getGroupKind($GroupID);
                             $GroupsForEvent = $Events->getGroupsForEvent($EventID);
-                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName, "Participants" => $EventParticipants, "Status"=>$GroupStatus,"Groups"=>$GroupsForEvent);
+                            $GroupsWithName = array();
+                            foreach($GroupsForEvent[0] as $ForEventGroupID)
+                            {
+                                $GroupName = $this->getGroupName($ForEventGroupID);
+                                $temp = array("GroupID" => $ForEventGroupID,"GroupName" => $GroupName);
+                                array_push($GroupsWithName,$temp);
+                            }
+                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName, "Participants" => $EventParticipants, "Status"=>$GroupStatus,"Groups"=>$GroupsWithName);
                             array_push($return,$EventProperties);
                         }
                     }
@@ -548,14 +555,20 @@ class group
                         $GroupsForEvent = $Events->getGroupsForEvent($EventID);
                         if ($GroupsForEvent != 22) {
                             $GroupStatus = array();
+                            $temp1 = array();
+                            $tempGroupsEvent = array();
                             foreach ($GroupsForEvent as $GroupID) {
                                 $GroupID =  $GroupID['GroupID'];
+                                $GroupName = $this->getGroupName($GroupID);
                                 $GroupKind = $this->getGroupKind($GroupID);
                                 //echo "Pimmel".$GroupKind;
                                 $GroupKind = array("Status" => $GroupKind);
+                                $tempGroupsEvent = array("GroupID" => $GroupID,"GroupName" => $GroupName);
+                                //$GroupID['GroupName'] = $GroupName;
+                                array_push($temp1,$tempGroupsEvent);
                                 array_push($GroupStatus, $GroupKind);
                             }
-                            $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
+                            $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $temp1);
                             array_push($temp,$return);
                         }
                         else{
