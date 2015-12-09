@@ -204,7 +204,8 @@ switch ($method) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_WrongNumberOfParameter);
                             break;
                         }
-                        $data = $Events->getEventMember($URIs[4]);
+                        //$data = $Events->getEventMember($URIs[4]);
+                        $data = $Events->getEventMembersWithInformation($URIs[4]);
                         if($data == 7) {
                             $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::General_QueryError);
                         }

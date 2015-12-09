@@ -405,6 +405,31 @@ class Event
         else return 'Error';
     }
 
+    public function getEventMembersWithInformation($EventID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT UserID FROM `eventmembers` WHERE EventID = :EventID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+        if($stmt->execute()){
+            if($stmt->rowCount() == 0) {
+                return 23;
+            }else{
+                $UserIDs = $stmt->fetchAll($PDO::FETCH_COLUMN);
+                $Users = new \Users\User();
+                $temp2= array();
+                foreach($UserIDs as $UserID){
+                    $Nickname = $Users->getNickname($UserID);
+                    $ParticipationState = $this->getParticipantStatus($EventID,$UserID);
+                    $temp1 = array('UserID' => $UserID, 'Nickname' => $Nickname, 'ParticipationState' => $ParticipationState);
+                    array_push($temp2,$temp1);
+                }
+                return array("Users" =>$temp2);
+            }
+        }
+        else return 7;
+    }
+
     public function getEventMember($EventID)
     {
         $PDO = $this->PDO;
