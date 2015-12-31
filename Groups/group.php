@@ -493,6 +493,7 @@ class group
                 $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
                 $stmt = $PDO->prepare($query);
                 $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+                $ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
                 if($stmt->execute())
                 {
                     if($this->isRelevant($LastDate,$stmt->fetchColumn(0)))
@@ -514,7 +515,7 @@ class group
                                 $temp = array("GroupID" => $ForEventGroupID,"GroupName" => $GroupName);
                                 array_push($GroupsWithName,$temp);
                             }
-                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName, "Participants" => $EventParticipants, "Status"=>$GroupStatus,"Groups"=>$GroupsWithName);
+                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participation" => $ParticipantState,  "Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
                             array_push($return,$EventProperties);
                         }
                     }
@@ -609,7 +610,7 @@ class group
                 $GroupMembers = $this->countMembers($GroupID);
                 $GroupName = $this->getGroupName($GroupID);
                 $GroupKind = $this->getGroupKind($GroupID);
-                $temp = array("GroupName"=>$GroupName,"GroupMembers"=>$GroupMembers,"Status"=>$GroupKind);
+                $temp = array("GroupID" => $GroupID, "GroupName"=>$GroupName,"GroupMembers"=>$GroupMembers,"Status"=>$GroupKind);
                 //$return = array_merge($return,array($temp) );
                 array_push($return,$temp);
             }

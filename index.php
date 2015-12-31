@@ -270,14 +270,10 @@ switch ($method) {
                 break;
 
             case ('test'):
-                //print_r($Groups->getEventsForUserWhereUserIsNotParticipating(1));
-                $data = $Groups->getGroupsForUserWithInformation($UserID);
-                $return->createReturn($data,\enum\statuscodes::OK,\enum\returncodes::Success);
-                //$return->createReturn($Wichser,\enum\statuscodes::OK,\enum\returncodes::Success);
-                //print_r($Wichser);
-                //echo 'TEST';
-                //echo $Users->checkUser('Christopher_Schroth@hotmail.de');
-                //hier Testmethoden einfügen
+                $test = $Groups->searchForGroup("");
+                print_r($test);
+                $return->createReturn($test,\enum\statuscodes::OK,\enum\returncodes::Success);
+
                 break;
             case ('Login'):
                 $return->createReturn(null,\enum\statuscodes::OK,\enum\returncodes::Success);
