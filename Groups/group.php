@@ -493,7 +493,7 @@ class group
                 $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
                 $stmt = $PDO->prepare($query);
                 $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-                $ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
+                //$ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
                 if($stmt->execute())
                 {
                     if($this->isRelevant($LastDate,$stmt->fetchColumn(0)))
@@ -515,7 +515,7 @@ class group
                                 $temp = array("GroupID" => $ForEventGroupID,"GroupName" => $GroupName);
                                 array_push($GroupsWithName,$temp);
                             }
-                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participation" => $ParticipantState,  "Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
+                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
                             array_push($return,$EventProperties);
                         }
                     }

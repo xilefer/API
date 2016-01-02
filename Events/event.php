@@ -468,8 +468,15 @@ class Event
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $data=$stmt->fetchAll($PDO::FETCH_ASSOC);
+            $data = $data[0];
+            $EventMembers = $this->getEventMembersWithInformation($EventID);
+
+            $temp = $EventMembers['Users'];
+            $data['Participants'] = $temp;
+//            array_push($data, $EventMembers['Users']);
+
             if($stmt->rowCount() == 0) return 21;
-            return $data[0];
+            return $data;
         }
         else return 2;
     }//Index

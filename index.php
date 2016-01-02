@@ -270,8 +270,8 @@ switch ($method) {
                 break;
 
             case ('test'):
-                $test = $Groups->searchForGroup("");
-                print_r($test);
+                $test = $Events->getEventProperties(747082096);
+                //print_r($test);
                 $return->createReturn($test,\enum\statuscodes::OK,\enum\returncodes::Success);
 
                 break;
