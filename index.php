@@ -270,9 +270,10 @@ switch ($method) {
                 break;
 
             case ('test'):
-                $test = $Events->getEventProperties(747082096);
-                //print_r($test);
-                $return->createReturn($test,\enum\statuscodes::OK,\enum\returncodes::Success);
+                $test = $Groups->reachedMaxMembers(456834617);
+
+                echo($test);
+                //$return->createReturn($test,\enum\statuscodes::OK,\enum\returncodes::Success);
 
                 break;
             case ('Login'):

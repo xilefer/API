@@ -48,6 +48,18 @@ class group
         else return -1;
     }
 
+    public function reachedMaxMembers($GroupID)
+    {
+        $PDO = $this->PDO;
+        $query = "SELECT `MaxMembers` FROM `group` WHERE GroupID = :GroupID";
+        $stmt = $PDO->prepare($query);
+        $stmt->bindParam(":GroupID",$GroupID);
+        if($stmt->execute()){
+            if($stmt->fetchColumn() == $this->countMembers($GroupID)) return true;
+            return false;
+        }
+    }
+
     private function isPasswordProtected($GroupID){
         $PDO = $this->PDO;
         $query = "SELECT Accessibility FROM `group` WHERE GroupID = :GroupID";
@@ -63,7 +75,7 @@ class group
 
     public function createGroupID()
     {
-        $query = "SELECT GroupID FROM group WHERE GroupID=:GroupID";
+        $query = "SELECT GroupID FROM `group` WHERE GroupID=:GroupID";
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         do{
@@ -359,8 +371,11 @@ class group
         foreach($GroupIDs['Groups'] as $GroupID){
             $GroupID = $GroupID["GroupID"];
             $GroupProperties = $this->getGroupProperties($GroupID,"2002-12-12 12:20");
-            $GroupProperties["GroupID"] = $GroupID;
-            array_push($ResultArray,$GroupProperties);
+            if($GroupProperties != 302){
+                $GroupProperties["GroupID"] = $GroupID;
+                array_push($ResultArray,$GroupProperties);
+            }
+
         }
         return array("Groups" => $ResultArray);
     }
@@ -515,7 +530,9 @@ class group
                                 $temp = array("GroupID" => $ForEventGroupID,"GroupName" => $GroupName);
                                 array_push($GroupsWithName,$temp);
                             }
-                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
+                            //$EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
+                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"Groups"=>$GroupsWithName);
+
                             array_push($return,$EventProperties);
                         }
                     }
@@ -569,13 +586,19 @@ class group
                                 array_push($temp1,$tempGroupsEvent);
                                 array_push($GroupStatus, $GroupKind);
                             }
-                            $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $temp1);
+                            //$return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $temp1);
+                            $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "Groups" => $temp1);
+
                             array_push($temp,$return);
                         }
                         else{
-                            $GroupStatus = array("Status" =>"NoGroups");
-                            $GroupsForEvent = array("Groups" => "NoGroups");
-                            $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
+                            //$GroupStatus = array("Status" =>"NoGroups");
+                            //$GroupsForEvent = array("Groups" => "NoGroups");
+                            $GroupStatus = array();
+                            $GroupsForEvent = array();
+                            //$return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "GroupsForEvent" => $GroupsForEvent);
+                            $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "Groups" => $GroupsForEvent);
+
                             array_push($temp,$return);
                         }
                     }
@@ -619,6 +642,7 @@ class group
         }
         else{} //echo "Falsch";
     }
+
     private function getGroupName($GroupID)
     {
         $query = "SELECT GroupName FROM `group` WHERE GroupID =:GroupID";
