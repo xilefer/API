@@ -59,7 +59,7 @@ class returncodes extends Enum{
     const Error_UserHasNoGroups = 32;
     const Error_CouldntCreateGroup = 33;
     const Error_CouldntAddMember = 34;
-    const Error_GroupIsPaswwordProtected = 35;
+    const Error_GroupIsPasswordProtected = 35;
     const Error_CantDeleteGroup = 36;
     const Error_CantDeleteMember = 37;
     const Error_CannotDeleteUserFromGroup = 38;
@@ -67,6 +67,7 @@ class returncodes extends Enum{
     const Error_NoGroupWithSuchName = 301;
     const Error_CantFindGroup = 302;
     const Error_NoMembersForGroup = 303;
+    const Error_ReachedMaxMembers = 304;
 
     //LocationErrorCodes;
     const Error_UserNotLocationOwner = 40;

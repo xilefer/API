@@ -69,7 +69,7 @@ class comment
             $Comments = $stmt->fetchAll($PDO::FETCH_ASSOC);
             $temp2 = array();
             foreach($Comments as $Comment){
-                array_push($temp2,array("Comment" => $Comment));
+                array_push($temp2,$Comment);
             }
             return array("Comments" => $temp2);
             //return array("Comments" =>  $stmt->fetchAll($PDO::FETCH_ASSOC));

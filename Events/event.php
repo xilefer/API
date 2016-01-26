@@ -55,7 +55,7 @@ class Event
 
     private function isEventOwner($UserID,$EventID)
     {
-        $query = "SELECT OwnerID FROM event WHERE EventID =:EventID";
+        $query = "SELECT Owner FROM event WHERE EventID =:EventID";
         $PDO = $this->PDO;
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
@@ -119,14 +119,14 @@ class Event
     //Methode darf nur vom GroupOwner ausgef�hrt werden
     /**
      * L�schte ein Event mit allen Teilnehmern
-     * Returncodes: 0,20,27,28
+     * Returncodes: 0,20,27,28,52
      * @param $EventID
      * @param $OwnerID
      * @return int
      */
     public function deleteEvent($EventID, $OwnerID)
     {
-        if($this->isEventOwner($OwnerID,$EventID))
+        if($this->isEventOwner($OwnerID,$EventID) == true)
         {
             $query = "DELETE  FROM event WHERE EventID = :EventID AND Owner = :OwnerID";
             $PDO = $this->PDO;
@@ -139,7 +139,13 @@ class Event
                 $query = "DELETE FROM eventmembers WHERE EventID = :EventID";
                 $stmt = $this->PDO->prepare($query);
                 $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-                if($stmt->execute() && ($Comments->deleteCommentsForEvent($EventID) == 0)) return 0;
+                if($stmt->execute()){
+                    if($Comments->deleteCommentsForEvent($EventID) == 0){
+                        return 0;
+                    }else{
+                        return 52;
+                    }
+                }
                 else return 28;
             }
             else{
@@ -469,9 +475,13 @@ class Event
         if($stmt->execute()){
             $data=$stmt->fetchAll($PDO::FETCH_ASSOC);
             $data = $data[0];
-            $EventMembers = $this->getEventMembersWithInformation($EventID);
+            $EventMembers = $this->getEventMembersWithInformation($EventID); //7
+            if($EventMembers == 7) return 7;
 
             $temp = $EventMembers['Users'];
+            if($EventMembers == 23){
+                $temp = array();
+            }
             $data['Participants'] = $temp;
 //            array_push($data, $EventMembers['Users']);
 

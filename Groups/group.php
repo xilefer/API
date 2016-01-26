@@ -24,6 +24,8 @@ class group
         }
     }
 
+
+
     public function isGroupAdmin($UserID,$GroupID)
     {
         $query="SELECT Owner FROM `group` WHERE GroupID = :GroupID";
@@ -38,6 +40,8 @@ class group
         else return False;
     }
 
+
+
     private function countMembers($GroupID)
     {
         $PDO = $this->PDO;
@@ -47,6 +51,8 @@ class group
         if($stmt->execute()) return $stmt->rowCount();
         else return -1;
     }
+
+
 
     public function reachedMaxMembers($GroupID)
     {
@@ -60,6 +66,8 @@ class group
         }
     }
 
+
+
     private function isPasswordProtected($GroupID){
         $PDO = $this->PDO;
         $query = "SELECT Accessibility FROM `group` WHERE GroupID = :GroupID";
@@ -70,7 +78,70 @@ class group
             if($data == "PASSWORD") return TRUE;
             else return FALSE;
         }
-        else return 'Error';
+        else return 7;
+    }
+
+    /**
+     * Ändert Parameter an Gruppen
+     * Returncodes 0,7,30,35
+     * @param $UserID
+     * @param $GroupID
+     * @param $Name
+     * @param $MaxMembers
+     * @return int
+     */
+    public function changeGroup($UserID,$GroupID,$Name,$MaxMembers)
+    {
+        $Temp = $this->isPasswordProtected($GroupID);
+        if($Temp == true) return 35;
+        if($Temp == 7) return 7;
+        if($this->isGroupAdmin($UserID,$GroupID)){
+            $PDO = $this->PDO;
+            $query = "UPDATE `group` SET GroupName = :Name AND MaxMembers = :MaxMembers WHERE GroupID = :GroupID";
+            $stmt = $PDO->prepare($query);
+            $stmt->bindParam(":Name", $Name);
+            $stmt->bindParam("MaxMembers",$MaxMembers);
+            $stmt->bindParam("GroupID",$GroupID);
+
+            if($stmt->execute()) {
+                return 0;
+            }else{
+                return 7;
+            }
+        }else{
+            return 30;
+        }
+
+    }
+
+    /**
+     * Ändert Parameter an Passwortgeschützter Gruppe
+     * Returncodes 0,7,30,35
+     * @param $UserID
+     * @param $GroupID
+     * @param $Name
+     * @param $MaxMembers
+     * @param $Password
+     * @return int
+     */
+    public function changeGroupProtected($UserID,$GroupID,$Name,$MaxMembers,$Password,$NewPassword)
+    {
+        //MaxMembers Prüfen auch in ChangeGroup und Passwort testen
+
+        $Temp = $this->isPasswordProtected($GroupID);
+        if($Temp == 7) return 7;
+        if($Temp == false) {
+            //Normales ChangeGroup Aufrufen
+            return $this->changeGroup($UserID,$GroupID,$Name,$MaxMembers);
+        }else{
+            if($this->isGroupAdmin($UserID,$GroupID)){
+                $PDO = $this->PDO;
+                $query = "UPDATE `group`SET Name = :Name AND MaxMembers = :MaxMembers WHERE GroupID = :GroupID";
+            }else{
+                return 30;
+            }
+        }
+
     }
 
     public function createGroupID()
@@ -269,6 +340,8 @@ class group
 
     #endregion
 
+
+    #region AddMember-Methoden
     /**
      * Fügt einer passwortgeschützten Gruppe einen Benutzer hinzu
      * Returncodes: 0,31,34
@@ -279,6 +352,7 @@ class group
      */
     public function addMemberProtected($GroupID,$Password,$UserID)
     {
+        if($this->reachedMaxMembers($GroupID)) return 304;
         $PDO = $this->PDO;
         $query = "SELECT GroupPassword FROM `group` WHERE GroupID = :GroupID";
         $stmt = $PDO->prepare($query);
@@ -310,6 +384,7 @@ class group
     public function addMember($GroupID,$UserID)
     {
         if($this->isPasswordProtected($GroupID)) return 666;
+        if($this->reachedMaxMembers($GroupID)) return 304;
         $PDO = $this->PDO;
         $query = "INSERT INTO groupmember(`GroupID`,`UserID`) VALUES (:GroupID,:UserID)";
         $stmt = $PDO->prepare($query);
@@ -318,6 +393,8 @@ class group
         if($stmt->execute()) return 0;
         else return 34;
     }//Index
+
+    #endregion
 
     /**
      * Löscht Mitglied aus einer Gruppe
@@ -359,6 +436,11 @@ class group
         else return 37;
     }
 
+    /**
+     * Gibt alle Gruppen mit Informationen einse Benutzers zurück, in denen er ist.
+     * @param $UserID
+     * @return array|int
+     */
     public function getGroupsForUserWithInformation($UserID){
         $GroupIDs = $this->getGroupsForUser($UserID);
         if($GroupIDs == 32){
@@ -370,7 +452,7 @@ class group
         $ResultArray = array();
         foreach($GroupIDs['Groups'] as $GroupID){
             $GroupID = $GroupID["GroupID"];
-            $GroupProperties = $this->getGroupProperties($GroupID,"2002-12-12 12:20");
+            $GroupProperties = $this->getGroupProperties($GroupID);
             if($GroupProperties != 302){
                 $GroupProperties["GroupID"] = $GroupID;
                 array_push($ResultArray,$GroupProperties);
@@ -380,7 +462,11 @@ class group
         return array("Groups" => $ResultArray);
     }
 
-    //Gibt alle GroupID`s zurück in denen der User ist
+    /**
+     * Gibt Alle ID`s der Gruppen für einen Benutzer zurück, in denen er ist.
+     * @param $UserID
+     * @return array|int
+     */
     public function getGroupsForUser($UserID)
     {
         $PDO = $this->PDO;
@@ -389,16 +475,20 @@ class group
         $stmt->bindParam(":UserID",$UserID,$PDO::PARAM_INT);
         if($stmt->execute()){
             $return = $stmt->fetchAll($PDO::FETCH_COLUMN,0);
+            if(count($return) == 0) return 32;
             $temp = array();
             foreach($return as $GroupID){
                 array_push($temp,array("GroupID" =>$GroupID));
             }
-            if(count($return) == 0) return 32;
             return array("Groups" =>$temp);
         }
         else return 12;
-    }//Index
+    }
+
+
     //Gibt alle GroupID`s zurück die dem User gehören
+
+
     public function getGroupsWhereUserIsOwner($UserID)
     {
         $PDO = $this->PDO;
@@ -471,9 +561,14 @@ class group
         if($stmt->execute()) {
             return $stmt->fetchAll($PDO::FETCH_COLUMN);
         }
-        else return 0;
+        else return 22;
     }
 
+    /**
+     * Gibt die Art der Gruppe (Offen, Passwortgeschützt) zurück.
+     * @param $GroupID
+     * @return int
+     */
     public function getGroupKind($GroupID)
     {
         $PDO = $this->PDO;
@@ -489,7 +584,6 @@ class group
 
     /**
      * Gibt für einen Benutzer alle Events seiner Gruppen zurück für welche er nicht als Teilnehmer eingetragen ist.
-     * Gibt ein JSON-Array zurück
      * @param $UserID
      * @return array
      */
@@ -497,49 +591,53 @@ class group
     {
         $return = array();
         $Groups = $this->getGroupsForUser($UserID);
-        foreach($Groups['Groups'] as $GroupID)
-        {
-            $GroupID = $GroupID['GroupID'];
-            $Events = new \Events\Event();
-            $EventsForGroup = $this->getEventsForGroup($GroupID);
-            foreach($EventsForGroup as $EventID)
-            {
-                $PDO = $this->PDO;
-                $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
-                $stmt = $PDO->prepare($query);
-                $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-                //$ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
-                if($stmt->execute())
-                {
-                    if($this->isRelevant($LastDate,$stmt->fetchColumn(0)))
-                    {
-                        if($Events->isParticipant($UserID,$EventID))
-                        {
-                            //Ist nicht relevant
-                        }
-                        else
-                        {
-                            $EventName = $Events->getEventName($EventID);
-                            $EventParticipants = $Events->getNumberOfParticipants($EventID);
-                            $GroupStatus = $this->getGroupKind($GroupID);
-                            $GroupsForEvent = $Events->getGroupsForEvent($EventID);
-                            $GroupsWithName = array();
-                            foreach($GroupsForEvent[0] as $ForEventGroupID)
-                            {
-                                $GroupName = $this->getGroupName($ForEventGroupID);
-                                $temp = array("GroupID" => $ForEventGroupID,"GroupName" => $GroupName);
-                                array_push($GroupsWithName,$temp);
-                            }
-                            //$EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
-                            $EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"Groups"=>$GroupsWithName);
+        if($Groups == 12)   return 12;
+        else if($Groups == 32)   return 32;
+        else {
+            foreach ($Groups['Groups'] as $GroupID) {
+                $GroupID = $GroupID['GroupID'];
+                $Events = new \Events\Event();
+                $EventsForGroup = $this->getEventsForGroup($GroupID);
+                if($EventsForGroup == 22){
+                    return 22;
+                }   else{
+                foreach ($EventsForGroup as $EventID) {
+                    $PDO = $this->PDO;
+                    $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
+                    $stmt = $PDO->prepare($query);
+                    $stmt->bindParam(":EventID", $EventID, $PDO::PARAM_INT);
+                    //$ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
+                    if ($stmt->execute()) {
+                        if ($this->isRelevant($LastDate, $stmt->fetchColumn(0))) {
+                            if ($Events->isParticipant($UserID, $EventID)) {
+                                //Ist nicht relevant
+                            } else {
+                                $EventName = $Events->getEventName($EventID);
+                                $EventParticipants = $Events->getNumberOfParticipants($EventID);
+                                $GroupStatus = $this->getGroupKind($GroupID);
+                                $GroupsForEvent = $Events->getGroupsForEvent($EventID); // 22 7
+                                if($GroupsForEvent == 22) return 22;
+                                else if($GroupsForEvent == 7) return 7;
+                                else{
+                                    $GroupsWithName = array();
+                                    foreach($GroupsForEvent[0] as $ForEventGroupID) {
+                                        $GroupName = $this->getGroupName($ForEventGroupID);
+                                        $temp = array("GroupID" => $ForEventGroupID, "GroupName" => $GroupName);
+                                        array_push($GroupsWithName, $temp);
+                                    }
+                                    //$EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
+                                    $EventProperties = array("EventID" => $EventID, "EventName" => $EventName, "Participants" => $EventParticipants, "GroupStatus" => $GroupStatus, "Groups" => $GroupsWithName);
 
-                            array_push($return,$EventProperties);
+                                    array_push($return, $EventProperties);
+                                }
+                            }
                         }
                     }
                 }
+                }
             }
+            return array("Events" => $return);
         }
-        return array("Events" =>$return);
     }
 
 
@@ -633,16 +731,23 @@ class group
                 $GroupMembers = $this->countMembers($GroupID);
                 $GroupName = $this->getGroupName($GroupID);
                 $GroupKind = $this->getGroupKind($GroupID);
-                $temp = array("GroupID" => $GroupID, "GroupName"=>$GroupName,"GroupMembers"=>$GroupMembers,"Status"=>$GroupKind);
+                $temp = array("GroupID" => $GroupID, "GroupName"=>$GroupName,"CurrentMembers"=>$GroupMembers,"Status"=>$GroupKind);
                 //$return = array_merge($return,array($temp) );
                 array_push($return,$temp);
             }
             $return = array("Groups" => $return);
             return $return;
         }
-        else{} //echo "Falsch";
+        else{
+            return 301;
+        } //echo "Falsch";
     }
 
+    /**
+     * Gibt den Namen der Gruppe zurück
+     * @param $GroupID
+     * @return int|string
+     */
     private function getGroupName($GroupID)
     {
         $query = "SELECT GroupName FROM `group` WHERE GroupID =:GroupID";
@@ -653,6 +758,11 @@ class group
         else return 301;
     }
 
+    /**
+     * Gibt die aktuelle Zahl der Mitglieder einer Gruppe zurück.
+     * @param $GroupID
+     * @return int
+     */
     private function countParticipants($GroupID)
     {
         $query = "SELECT * FROM `groupmember` WHERE GroupID = :EventID";
