@@ -977,7 +977,7 @@ class group
                     {
                         $UserName = $Users->getNickname($UserID);
                         if($UserName != 102 && $UserNames != 7){
-                            $UserName = array("UserName" => $UserName);
+                            $UserName = array("UserID" => $UserID,"UserName" => $UserName);
                             array_push($UserNames,$UserName);
                         }
 

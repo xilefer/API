@@ -190,10 +190,13 @@ class Event
                 $stmt = $this->PDO->prepare($query);
                 $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
                 if($stmt->execute()){
-                    if($Comments->deleteCommentsForEvent($EventID,$OwnerID) == 0){
+                    $temp = $Comments->deleteCommentsForEvent($EventID,$OwnerID);
+                    if($temp == 0){
                         return 0;
-                    }else{
+                    }else if($temp == 52){
                         return 52;
+                    }else if($temp == 20){
+                        return 20;
                     }
                 }
                 else return 28;
