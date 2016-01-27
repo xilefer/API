@@ -52,6 +52,7 @@ class returncodes extends Enum{
     const Error_ReachedMaxParticipants = 201;
     const Error_ParticipantAlreadyExisting = 202;
     const Error_GroupAlreadyAdded = 203;
+    const Error_UserHasNoEvents = 204;
 
     //GroupErrorCodes:
     const Error_UserNotGroupOwner = 30;

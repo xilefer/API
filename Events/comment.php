@@ -41,6 +41,14 @@ class comment
         return $ID;
     }
 
+    /**
+     * Erstellt einen neuen Kommentar in einem Event
+     * Returncodes: 0; 50
+     * @param $EventID
+     * @param $Comment
+     * @param $UserID
+     * @return int
+     */
     public function newComment($EventID,$Comment,$UserID)
     {
         $PDO = $this->PDO;
@@ -59,6 +67,12 @@ class comment
         else return 50;
     }
 
+    /**
+     * Gibt alle Kommentare eines Events zurück
+     * Returncodes: 7; 51
+     * @param $EventID
+     * @return array|int
+     */
     public function getCommentsForEvent($EventID)
     {
         $query ="SELECT UserName,UserID,Text,CreationDate FROM `eventcomment` WHERE EventID = :EventID";
@@ -66,25 +80,36 @@ class comment
         $stmt = $PDO->prepare($query);
         $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
         if($stmt->execute()) {
+            if($stmt->rowCount() == 0) return 51;
             $Comments = $stmt->fetchAll($PDO::FETCH_ASSOC);
             $temp2 = array();
             foreach($Comments as $Comment){
                 array_push($temp2,$Comment);
             }
             return array("Comments" => $temp2);
-            //return array("Comments" =>  $stmt->fetchAll($PDO::FETCH_ASSOC));
         }
-        else return 51;
+        else return 7;
     }
 
-    public function deleteCommentsForEvent($EventID)
+    /**
+     * Löscht alle Kommentare eines Events
+     * Returncodes: 0; 20; 52
+     * @param $EventID
+     * @param $UserID
+     * @return int
+     */
+    public function deleteCommentsForEvent($EventID, $UserID)
     {
-        $query = "DELETE FROM `eventcomment` WHERE EventID = :EventID";
-        $PDO = $this->PDO;
-        $stmt = $PDO->prepare($query);
-        $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
-        if($stmt->execute()) return 0;
-        else return 52;
+        $Event = new \Events\Event();
+        if($Event->isEventOwner($UserID,$EventID) == true){
+            $query = "DELETE FROM `eventcomment` WHERE EventID = :EventID";
+            $PDO = $this->PDO;
+            $stmt = $PDO->prepare($query);
+            $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+            if($stmt->execute()) return 0;
+            else return 52;
+        }
+        else return 20;
     }
 
 }
