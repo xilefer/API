@@ -528,6 +528,7 @@ switch ($method) {
                     }else{
                         $return->createReturn(null,\enum\statuscodes::INTERNAL_SERVER_ERROR,\enum\returncodes::General_GroupError);
                     }
+                    break;
                 }else if($Count == 8){
                     $data = $Groups->changeGroupProtected($UserID,$URIs[3], $URIs[4],$URIs[5],$URIs[6],$URIs[7]);
                     if($data == 0){
@@ -541,6 +542,7 @@ switch ($method) {
                     }else if($data == 35){
                         $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_GroupIsPasswordProtected);
                     }
+                    break;
                 }else{
                     $return->createReturn(null,\enum\statuscodes::BAD_REQUEST,\enum\returncodes::Error_WrongNumberofParameters);
 

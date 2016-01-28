@@ -152,7 +152,7 @@ class Event
             $MeetingPoint = str_replace("%20"," ",$MeetingPoint);
             $Starttime = str_replace("%20"," ",$Starttime);
             $EndTime = str_replace("%20"," ",$EndTime);
-            $query = "UPDATE event SET Starttime = :Starttime, Endtime = :Endtime, MeetingPoint = :MeetingPoint, Description = :Description, MaxParticipants = :MaxParticipants, Transport = :Transport WHERE $EventID = :EventID";
+            $query = "UPDATE event SET Starttime = :Starttime, Endtime = :Endtime, MeetingPoint = :MeetingPoint, Description = :Description, MaxParticipants = :MaxParticipants, Transport = :Transport WHERE EventID = :EventID";
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":Starttime",$Starttime);
             $stmt->bindParam(":Endtime",$EndTime);

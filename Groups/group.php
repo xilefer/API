@@ -244,10 +244,11 @@ class group
                     if($stmt->fetchColumn(0) == $Password){
                         $query = "UPDATE `group` SET Accessibility = :Accessibility, GroupPassword = :GPW WHERE GroupID = :GroupID";
                         $stmt = $PDO->prepare($query);
-                        $Acces = "OPEN";
-                        $stmt->bindParam(":Accessibility",$Acces);
-                        $Acces ="";
-                        $stmt->bindParam(":GPW",$Acces);
+                        //$Acces = "OPEN";
+                        $stmt->bindValue(":Accessibility","OPEN");
+                        //$stmt->bindParam(":Accessibility",$Acces);
+                        //$Temp2 ="";
+                        $stmt->bindValue(":GPW","");
                         $stmt->bindParam(":GroupID",$GroupID);
                         if($stmt->execute()){
                             return 0;
