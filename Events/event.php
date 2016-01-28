@@ -9,6 +9,8 @@
 namespace Events;
 
 use enum\returncodes;
+use Events\comment;
+use Users\User;
 
 class Event
 {
@@ -116,13 +118,15 @@ class Event
         {
             return 7;
         }
-    }//Index
+        return 7;
+    }
 
     private function computeMaxParticipants($EventID,$MaxParticipants)
     {
         $AktPart = $this->getNumberOfParticipants($EventID);
         if($AktPart > $MaxParticipants) return $AktPart;
         else if($AktPart <= $MaxParticipants) return $MaxParticipants;
+        return 0;
     }
 
 
@@ -184,7 +188,7 @@ class Event
             $stmt = $PDO->prepare($query);
             $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
             $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
-            $Comments = new \Events\comment();
+            $Comments = new comment();
             $temp = $Comments->deleteCommentsForEvent($EventID,$OwnerID);
             if($temp == 0){
                 if($stmt->execute()){
@@ -206,6 +210,7 @@ class Event
         else {
             return 20;
         }
+        return 20;
     }
 
     #region Change-Methoden
@@ -482,7 +487,7 @@ class Event
                 return 23;
             }else{
                 $UserIDs = $stmt->fetchAll($PDO::FETCH_COLUMN);
-                $Users = new \Users\User();
+                $Users = new User();
                 $temp2= array();
                 foreach($UserIDs as $UserID){
                     $Nickname = $Users->getNickname($UserID);
