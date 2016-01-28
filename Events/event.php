@@ -185,31 +185,28 @@ class Event
             $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
             $stmt->bindParam(":OwnerID",$OwnerID,$PDO::PARAM_INT);
             $Comments = new \Events\comment();
-            if($stmt->execute()){
-                $query = "DELETE FROM eventmembers WHERE EventID = :EventID";
-                $stmt = $this->PDO->prepare($query);
-                $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+            $temp = $Comments->deleteCommentsForEvent($EventID,$OwnerID);
+            if($temp == 0){
                 if($stmt->execute()){
-                    $temp = $Comments->deleteCommentsForEvent($EventID,$OwnerID);
-                    if($temp == 0){
+                    $query = "DELETE FROM eventmembers WHERE EventID = :EventID";
+                    $stmt = $this->PDO->prepare($query);
+                    $stmt->bindParam(":EventID",$EventID,$PDO::PARAM_INT);
+                    if($stmt->execute()){
                         return 0;
-                    }else if($temp == 52){
-                        return 52;
-                    }else if($temp == 20){
-                        return 20;
-                    }
+                    }else return 28;
+                }else{
+                    return 27;
                 }
-                else return 28;
-            }
-            else{
-
-                return 27;
+            }else if($temp == 52){
+                return 52;
+            }else if($temp == 20){
+                return 20;
             }
         }
         else {
             return 20;
         }
-    }//Index
+    }
 
     #region Change-Methoden
 
