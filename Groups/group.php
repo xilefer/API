@@ -746,7 +746,7 @@ class group
                 }   else{
                 foreach ($EventsForGroup as $EventID) {
                     $PDO = $this->PDO;
-                    $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
+                    $query = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID AND Status != 'PASSED'";
                     $stmt = $PDO->prepare($query);
                     $stmt->bindParam(":EventID", $EventID, $PDO::PARAM_INT);
                     //$ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
@@ -803,7 +803,7 @@ class group
             $temp = array();
             foreach($EventIDS as $EventID)
             {
-                $DateQuery = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID";
+                $DateQuery = "SELECT `ModificationDate` FROM `event` WHERE EventID = :EventID AND Status != 'PASSED'";
                 $stmtDate = $PDO->prepare($DateQuery);
                 $stmtDate->bindParam(":EventID",$EventID);
                 if($stmtDate->execute())
