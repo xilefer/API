@@ -750,32 +750,35 @@ class group
                     $stmt = $PDO->prepare($query);
                     $stmt->bindParam(":EventID", $EventID, $PDO::PARAM_INT);
                     //$ParticipantState = $Events->getParticipantStatus($EventID,$UserID);
-                    if ($stmt->execute()) {
-                        if ($this->isRelevant($LastDate, $stmt->fetchColumn(0))) {
-                            if ($Events->isParticipant($UserID, $EventID)) {
-                                //Ist nicht relevant
-                            } else {
-                                $EventName = $Events->getEventName($EventID);
-                                $EventParticipants = $Events->getNumberOfParticipants($EventID);
-                                $GroupStatus = $this->getGroupKind($GroupID);
-                                $GroupsForEvent = $Events->getGroupsForEvent($EventID); // 22 7
-                                if($GroupsForEvent == 22) return 22;
-                                else if($GroupsForEvent == 7) return 7;
-                                else{
-                                    $GroupsWithName = array();
-                                    foreach($GroupsForEvent[0] as $ForEventGroupID) {
-                                        $GroupName = $this->getGroupName($ForEventGroupID);
-                                        $temp = array("GroupID" => $ForEventGroupID, "GroupName" => $GroupName);
-                                        array_push($GroupsWithName, $temp);
-                                    }
-                                    //$EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
-                                    $EventProperties = array("EventID" => $EventID, "EventName" => $EventName, "Participants" => $EventParticipants, "GroupStatus" => $GroupStatus, "Groups" => $GroupsWithName);
+                    if($stmt->rowCount() == 0){
+                        if ($stmt->execute()) {
+                            if ($this->isRelevant($LastDate, $stmt->fetchColumn(0))) {
+                                if ($Events->isParticipant($UserID, $EventID)) {
+                                    //Ist nicht relevant
+                                } else {
+                                    $EventName = $Events->getEventName($EventID);
+                                    $EventParticipants = $Events->getNumberOfParticipants($EventID);
+                                    $GroupStatus = $this->getGroupKind($GroupID);
+                                    $GroupsForEvent = $Events->getGroupsForEvent($EventID); // 22 7
+                                    if($GroupsForEvent == 22) return 22;
+                                    else if($GroupsForEvent == 7) return 7;
+                                    else{
+                                        $GroupsWithName = array();
+                                        foreach($GroupsForEvent[0] as $ForEventGroupID) {
+                                            $GroupName = $this->getGroupName($ForEventGroupID);
+                                            $temp = array("GroupID" => $ForEventGroupID, "GroupName" => $GroupName);
+                                            array_push($GroupsWithName, $temp);
+                                        }
+                                        //$EventProperties = array("EventID" => $EventID,"EventName" => $EventName,"Participants" => $EventParticipants, "GroupStatus"=>$GroupStatus,"GroupsForEvent"=>$GroupsWithName);
+                                        $EventProperties = array("EventID" => $EventID, "EventName" => $EventName, "Participants" => $EventParticipants, "GroupStatus" => $GroupStatus, "Groups" => $GroupsWithName);
 
-                                    array_push($return, $EventProperties);
+                                        array_push($return, $EventProperties);
+                                    }
                                 }
                             }
                         }
                     }
+
                 }
                 }
             }
@@ -808,37 +811,40 @@ class group
                 $stmtDate->bindParam(":EventID",$EventID);
                 if($stmtDate->execute())
                 {
-                    $SelectedDate = $stmtDate->fetchAll($PDO::FETCH_COLUMN);
-                    if($this->isRelevant($LastDate,$SelectedDate[0])) {
-                        $Events = new \Events\Event();
-                        $EventName = $Events->getEventName($EventID);
-                        $ParticipantStatus = $Events->getParticipantStatus($EventID, $UserID);
-                        $Pariticipants = $Events->getNumberOfParticipants($EventID);
-                        $GroupsForEvent = $Events->getGroupsForEvent($EventID);
-                        if($GroupsForEvent == 22){
-                            $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => array(), "Groups" => array());
-                            array_push($temp,$return);
-                        }
-                        else if($GroupsForEvent == 7){
-                            $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => array(), "Groups" => array());
-                            array_push($temp,$return);
-                        }
-                        else{
-                            $GroupStatus = array();
-                            $temp1 = array();
-                            foreach ($GroupsForEvent as $GroupID) {
-                                $GroupID =  $GroupID['GroupID'];
-                                $GroupName = $this->getGroupName($GroupID);
-                                $GroupKind = $this->getGroupKind($GroupID);
-                                $GroupKind = array("Status" => $GroupKind);
-                                $tempGroupsEvent = array("GroupID" => $GroupID,"GroupName" => $GroupName);
-                                array_push($temp1,$tempGroupsEvent);
-                                array_push($GroupStatus, $GroupKind);
+                    if($stmtDate->rowCount() != 0){
+                        $SelectedDate = $stmtDate->fetchAll($PDO::FETCH_COLUMN);
+                        if($this->isRelevant($LastDate,$SelectedDate[0])) {
+                            $Events = new \Events\Event();
+                            $EventName = $Events->getEventName($EventID);
+                            $ParticipantStatus = $Events->getParticipantStatus($EventID, $UserID);
+                            $Pariticipants = $Events->getNumberOfParticipants($EventID);
+                            $GroupsForEvent = $Events->getGroupsForEvent($EventID);
+                            if($GroupsForEvent == 22){
+                                $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => array(), "Groups" => array());
+                                array_push($temp,$return);
                             }
-                            $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "Groups" => $temp1);
-                            array_push($temp,$return);
+                            else if($GroupsForEvent == 7){
+                                $return = array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => array(), "Groups" => array());
+                                array_push($temp,$return);
+                            }
+                            else{
+                                $GroupStatus = array();
+                                $temp1 = array();
+                                foreach ($GroupsForEvent as $GroupID) {
+                                    $GroupID =  $GroupID['GroupID'];
+                                    $GroupName = $this->getGroupName($GroupID);
+                                    $GroupKind = $this->getGroupKind($GroupID);
+                                    $GroupKind = array("Status" => $GroupKind);
+                                    $tempGroupsEvent = array("GroupID" => $GroupID,"GroupName" => $GroupName);
+                                    array_push($temp1,$tempGroupsEvent);
+                                    array_push($GroupStatus, $GroupKind);
+                                }
+                                $return =  array("EventID" => $EventID, "EventName" => $EventName, "Participation" => $ParticipantStatus, "Participants" => $Pariticipants, "GroupStatus" => $GroupStatus, "Groups" => $temp1);
+                                array_push($temp,$return);
+                            }
                         }
                     }
+
                 }
             }
             return array("Events" =>$temp);
